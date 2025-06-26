@@ -4,17 +4,31 @@ import {
   AUTH_FAIL,
   AUTH_LOGOUT,
   AUTH_CLEAR_ERRORS
-
 } from "../actions/authActions";
 import { updateObject } from "../utility";
 
-const initialState = {
+interface AuthState {
+  token: string | null;
+  error: any;
+  loading: boolean;
+}
+
+interface AuthAction {
+  type: string;
+  token?: string | null;
+  error?: any;
+}
+
+const initialState: AuthState = {
   token: null,
   error: null,
   loading: false
 };
 
-export default function authReducer(state = initialState, action) {
+export default function authReducer(
+  state: AuthState = initialState,
+  action: AuthAction
+): AuthState {
   switch (action.type) {
     case AUTH_START:
       return updateObject(state, { error: null, loading: true });

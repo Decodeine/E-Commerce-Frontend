@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import {
@@ -9,18 +8,34 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./css/products.css";
 
-const mapStateToProps = state => {
-  return state.store;
-};
-
-function mapDispatchToProps(dispatch) {
-  return {
-    addProductToCart: item => dispatch(addProductToCart(item, 1)),
-    removeProductFromCart: item => dispatch(removeProductFromCart(item))
-  };
+// Type definitions
+interface ProductItem {
+  id: string | number;
+  slug: string;
+  name: string;
+  price: number;
+  picture: string;
+  quantity: number;
+  [key: string]: any;
 }
 
-class Product extends React.Component {
+interface ProductProps {
+  item: ProductItem;
+  cart: ProductItem[];
+  addProductToCart: (item: ProductItem) => void;
+  removeProductFromCart: (item: ProductItem) => void;
+}
+
+const mapStateToProps = (state: any) => ({
+  cart: state.store.cart
+});
+
+const mapDispatchToProps = (dispatch: any) => ({
+  addProductToCart: (item: ProductItem) => dispatch(addProductToCart(item, 1)),
+  removeProductFromCart: (item: ProductItem) => dispatch(removeProductFromCart(item))
+});
+
+class Product extends React.Component<ProductProps> {
   inCart = () => {
     const { item, cart } = this.props;
     const res = cart.find(e => e.id === item.id);
@@ -50,7 +65,7 @@ class Product extends React.Component {
             ) : (
               <div>
                 <button
-                  type="submit"
+                  type="button"
                   className="btn btn-success"
                   onClick={() => this.props.addProductToCart(item)}
                 >
@@ -59,21 +74,17 @@ class Product extends React.Component {
                     <span className="ml-2 font-weight-bold">
                       {this.inCart()}
                     </span>
-                  ) : (
-                    ""
-                  )}
+                  ) : null}
                 </button>
                 {this.inCart() > 0 ? (
                   <button
-                    type="submit"
+                    type="button"
                     className="btn btn-danger ml-1"
                     onClick={() => this.props.removeProductFromCart(item)}
                   >
                     <FontAwesomeIcon icon="trash-alt" />
                   </button>
-                ) : (
-                  ""
-                )}
+                ) : null}
               </div>
             )}
           </div>
@@ -82,13 +93,6 @@ class Product extends React.Component {
     );
   }
 }
-
-Product.propTypes = {
-  cart: PropTypes.array,
-  item: PropTypes.object,
-  addProductToCart: PropTypes.func.isRequired,
-  removeProductFromCart: PropTypes.func.isRequired
-};
 
 export default connect(
   mapStateToProps,

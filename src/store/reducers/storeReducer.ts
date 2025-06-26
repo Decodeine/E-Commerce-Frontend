@@ -17,117 +17,144 @@ import {
 
 import { updateObject } from "../utility";
 
-const initialState = {
+
+interface CartItem {
+  id: string;
+  price: number;
+  quantity: number;
+  [key: string]: any;
+}
+
+interface StoreState {
+  products: CartItem[];
+  loading: boolean;
+  error: any;
+  cart: CartItem[];
+  subtotal: number;
+  tax: number;
+  shipping: string;
+  isDifferentBillingAddress: boolean;
+  paymentStatus: string;
+  isCheckoutComplete: boolean;
+  didPaymentGoThrough: boolean;
+}
+
+interface Action {
+  type: string;
+  [key: string]: any;
+}
+
+const initialState: StoreState = {
   products: [],
   loading: false,
   error: null,
-
-  cart: [], // items in cart
+  cart: [],
   subtotal: 0,
-  tax: 0.2, // 20% tax
-  shipping: "standard", // standard shipping is £5
+  tax: 0.2,
+  shipping: "standard",
   isDifferentBillingAddress: false,
-
   paymentStatus: "",
   isCheckoutComplete: false,
   didPaymentGoThrough: false
 };
 
-export const addProductToCart = (state, action) => {
+export const addProductToCart = (state: StoreState, action: Action): StoreState => {
   const itemInCart = state.cart.find(e => e.id === action.item.id);
-  // check if the item is in the cart already
   if (itemInCart) {
-    // if it does, increment quantity of an existing item...
     return incProductQuantity(state, action);
   } else {
-    // ... if it doesn't, create it
-    const newItem = Object.assign({}, action.item);
-    newItem.quantity = action.quantity;
-
+    const newItem = { ...action.item, quantity: action.quantity };
     return updateObject(state, {
       cart: state.cart.concat(newItem)
     });
   }
 };
 
-export const removeProductFromCart = (state, action) => {
-  // get all cart items not matching the item being removed
+export const removeProductFromCart = (state: StoreState, action: Action): StoreState => {
   const result = state.cart.filter(e => e.id !== action.item.id);
   return updateObject(state, { cart: result });
 };
 
-export const incProductQuantity = (state, action) => {
+export const incProductQuantity = (state: StoreState, action: Action): StoreState => {
   const cartCopy = JSON.parse(JSON.stringify(state.cart));
-  const item = cartCopy.find(e => e.id === action.item.id);
+  const item = cartCopy.find((e: CartItem) => e.id === action.item.id);
   const itemInStock = state.products.find(e => e.id === action.item.id);
-  if (item.quantity < itemInStock.quantity) {
-    item.quantity += 1;
-  } else {
-    item.quantity = itemInStock.quantity;
-  }
-  return updateObject(state, { cart: cartCopy });
-};
-
-export const decProductQuantity = (state, action) => {
-  const cartCopy = JSON.parse(JSON.stringify(state.cart));
-  const item = cartCopy.find(e => e.id === action.item.id);
-  item.quantity -= 1;
-  if (item.quantity === 0) {
-    return removeProductFromCart(state, action);
-  } else {
-    return updateObject(state, { cart: cartCopy });
-  }
-};
-
-export const updateProductQuantity = (state, action) => {
-  const cartCopy = JSON.parse(JSON.stringify(state.cart));
-  const item = cartCopy.find(e => e.id === action.item.id);
-  const itemInStock = state.products.find(e => e.id === action.item.id);
-
-  if (action.quantity < itemInStock.quantity) {
-    if (action.quantity <= 0) {
-      return removeProductFromCart(state, action);
+  if (item && itemInStock) {
+    if (item.quantity < itemInStock.quantity) {
+      item.quantity += 1;
     } else {
-      item.quantity = action.quantity;
+      item.quantity = itemInStock.quantity;
     }
-  } else {
-    item.quantity = itemInStock.quantity;
   }
   return updateObject(state, { cart: cartCopy });
 };
 
-export const emptyCart = (state, action) => {
+export const decProductQuantity = (state: StoreState, action: Action): StoreState => {
+  const cartCopy = JSON.parse(JSON.stringify(state.cart));
+  const item = cartCopy.find((e: CartItem) => e.id === action.item.id);
+  if (item) {
+    item.quantity -= 1;
+    if (item.quantity === 0) {
+      return removeProductFromCart(state, action);
+    }
+  }
+  return updateObject(state, { cart: cartCopy });
+};
+
+export const updateProductQuantity = (state: StoreState, action: Action): StoreState => {
+  const cartCopy = JSON.parse(JSON.stringify(state.cart));
+  const item = cartCopy.find((e: CartItem) => e.id === action.item.id);
+  const itemInStock = state.products.find(e => e.id === action.item.id);
+
+  if (item && itemInStock) {
+    if (action.quantity < itemInStock.quantity) {
+      if (action.quantity <= 0) {
+        return removeProductFromCart(state, action);
+      } else {
+        item.quantity = action.quantity;
+      }
+    } else {
+      item.quantity = itemInStock.quantity;
+    }
+  }
+  return updateObject(state, { cart: cartCopy });
+};
+
+export const emptyCart = (state: StoreState, action: Action): StoreState => {
   return updateObject(state, { cart: [] });
 };
 
-export const calculateCart = (state, action) => {
+export const calculateCart = (state: StoreState, action: Action): StoreState => {
   let subtotal = 0;
-  state.cart.map(item => (subtotal += item.price * item.quantity));
+  state.cart.forEach(item => (subtotal += item.price * item.quantity));
   return updateObject(state, {
     subtotal: subtotal
   });
 };
 
-export const setShipping = (state, action) => {
+export const setShipping = (state: StoreState, action: Action): StoreState => {
   return updateObject(state, { shipping: action.value });
 };
 
-export const toggleCheckoutComplete = (state, action) => {
+export const toggleCheckoutComplete = (state: StoreState, action: Action): StoreState => {
   return updateObject(state, { isCheckoutComplete: !state.isCheckoutComplete });
 };
 
-export const toggleDifferentBillingAddress = (state, action) => {
+export const toggleDifferentBillingAddress = (state: StoreState, action: Action): StoreState => {
   return updateObject(state, {
     isDifferentBillingAddress: !state.isDifferentBillingAddress
   });
 };
 
-export const setPayment = (state, action) => {
+export const setPayment = (state: StoreState, action: Action): StoreState => {
   return updateObject(state, { paymentStatus: action.value });
 };
 
 // reducer
-export default function storeReducer(state = initialState, action) {
+export default function storeReducer(
+  state: StoreState = initialState,
+  action: Action
+): StoreState {
   switch (action.type) {
     case FETCH_PRODUCTS_START:
       return updateObject(state, { loading: true });

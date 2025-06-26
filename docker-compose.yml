@@ -1,9 +1,9 @@
 services:
   frontend:
     build: .
-    command: ["npm", "start"]
+    command: ["npm", "run", "dev"]
     ports:
-      - "3000:3000"
+      - "5173:5173"
     volumes:
       - .:/app
       - /app/node_modules  # Ensure node_modules are stored inside the container

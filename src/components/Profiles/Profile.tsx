@@ -1,22 +1,20 @@
 import React from "react";
-import { BrowserRouter as Router, Switch, Link } from "react-router-dom";
-
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { connect } from "react-redux";
-import * as auth from "../../store/actions/auth";
+import * as auth from "../../store/actions/authActions";
 
 import PersonalDetails from "./PersonalDetails";
 import BillingAddress from "./BillingAddress";
 import DeliveryAddress from "./DeliveryAddress";
-
 import PrivateRoute from "../Utilities/PrivateRoute";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state: any) => {
   return state.auth;
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch: any) => {
   return {
-    onAuth: (username, password) =>
+    onAuth: (username: string, password: string) =>
       dispatch(auth.authLogin(username, password))
   };
 };
@@ -41,11 +39,32 @@ class Profile extends React.Component {
               </ul>
             </div>
             <div className="col-md-9">
-            <Switch>
-              <PrivateRoute exact path="/" component={PersonalDetails} />
-              <PrivateRoute path="/billing" component={BillingAddress} />
-              <PrivateRoute path="/delivery" component={DeliveryAddress} />
-            </Switch>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <PrivateRoute>
+                      <PersonalDetails />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/billing"
+                  element={
+                    <PrivateRoute>
+                      <BillingAddress />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/delivery"
+                  element={
+                    <PrivateRoute>
+                      <DeliveryAddress />
+                    </PrivateRoute>
+                  }
+                />
+              </Routes>
             </div>
           </div>
         </Router>

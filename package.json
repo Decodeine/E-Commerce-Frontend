@@ -8,30 +8,29 @@
     "@fortawesome/free-regular-svg-icons": "^5.7.2",
     "@fortawesome/free-solid-svg-icons": "^5.7.2",
     "@fortawesome/react-fontawesome": "^0.1.4",
-    "axios": "^0.21.2",
-    "bootstrap": "^4.3.1",
+    "@reduxjs/toolkit": "^2.8.2",
+    "@stripe/react-stripe-js": "^3.7.0",
+    "@stripe/stripe-js": "^7.4.0",
+    "axios": "^1.10.0",
+    "bootstrap": "^5.3.7",
     "history": "^4.9.0",
     "jwt-decode": "^2.2.0",
     "prop-types": "^15.7.2",
-    "react": "^16.8.4",
-    "react-dom": "^16.8.4",
-    "react-redux": "^6.0.1",
-    "react-router-dom": "^5.3.3",
-    "react-router-last-location": "^2.0.0-beta.1",
-    "react-scripts": "^2.1.8",
+    "react": "^18.3.1",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.51.3",
+    "react-redux": "^8.1.3",
+    "react-router-dom": "^6.23.1",
     "react-stripe-checkout": "^2.6.3",
-    "react-stripe-elements": "^2.0.3",
-    "reactstrap": "^7.1.0",
-    "redux": "^4.0.1",
-    "redux-form": "^8.1.0",
-    "redux-thunk": "^2.3.0"
+    "redux": "^4.2.1",
+    "redux-thunk": "^2.4.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "buildStart": "yarn install && yarn start",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "eslintConfig": {
     "extends": [
@@ -49,6 +48,19 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jwt-decode": "^2.2.1",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.2",
+    "@types/testing-library__react": "^10.0.1",
+    "@vitejs/plugin-react": "^4.6.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.0",
+    "vitest": "^3.2.4"
   }
 }
-

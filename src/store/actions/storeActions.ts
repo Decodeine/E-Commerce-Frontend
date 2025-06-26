@@ -1,6 +1,10 @@
 import axios from "axios";
 import { API_PATH } from "../../backend_url";
+import { ThunkAction, ThunkDispatch } from "@reduxjs/toolkit";
+import { RootState } from '../store';
+import { AnyAction } from "redux";
 
+// Action Types
 export const FETCH_PRODUCTS_START = "FETCH_PRODUCTS_START";
 export const FETCH_PRODUCTS_SUCCESS = "FETCH_PRODUCTS_SUCCESS";
 export const FETCH_PRODUCTS_FAIL = "FETCH_PRODUCTS_FAIL";
@@ -17,21 +21,21 @@ export const TOGGLE_CHECKOUT_COMPLETE = "TOGGLE_CHECKOUT_COMPLETE";
 export const TOGGLE_DIFFERENT_BILLING_ADDRESS = "TOGGLE_DIFFERENT_BILLING_ADDRESS";
 export const SET_PAYMENT = "SET_PAYMENT";
 
-export const fetchProducts = (query = "") => {
-  return dispatch => {
+// Thunk action for fetching products
+export const fetchProducts = (
+  query = ""
+): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
+  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>) => {
     dispatch(fetchProductsStart());
-    if (query === "") {
-      return axios
-        .get(`${API_PATH}products/`)
-        .then(res => dispatch(fetchProductsSuccess(res.data)))
-        .catch(err => dispatch(fetchProductsFail(err)));
-    } else {
-      return axios
-        .get(`${API_PATH}products/?search=${query}`)
-        .then(res => {
-          dispatch(fetchProductsSuccess(res.data));
-        })
-        .catch(err => dispatch(fetchProductsFail(err)));
+    try {
+      const url =
+        query === ""
+          ? `${API_PATH}products/`
+          : `${API_PATH}products/?search=${query}`;
+      const res = await axios.get(url);
+      dispatch(fetchProductsSuccess(res.data));
+    } catch (err) {
+      dispatch(fetchProductsFail(err));
     }
   };
 };
@@ -42,21 +46,21 @@ export const fetchProductsStart = () => {
   };
 };
 
-export const fetchProductsSuccess = products => {
+export const fetchProductsSuccess = (products: any[]) => {
   return {
     type: FETCH_PRODUCTS_SUCCESS,
     products
   };
 };
 
-export const fetchProductsFail = error => {
+export const fetchProductsFail = (error: any) => {
   return {
     type: FETCH_PRODUCTS_FAIL,
     error
   };
 };
 
-export const addProductToCart = (item, quantity) => {
+export const addProductToCart = (item: any, quantity: number) => {
   return {
     type: ADD_PRODUCT_TO_CART,
     item: item,
@@ -64,14 +68,14 @@ export const addProductToCart = (item, quantity) => {
   };
 };
 
-export const removeProductFromCart = item => {
+export const removeProductFromCart = (item: any) => {
   return {
     type: REMOVE_PRODUCT_FROM_CART,
     item: item
   };
 };
 
-export const updateProductQuantity = (item, quantity) => {
+export const updateProductQuantity = (item: any, quantity: number) => {
   return {
     type: UPDATE_PRODUCT_QUANTITY,
     item: item,
@@ -79,14 +83,14 @@ export const updateProductQuantity = (item, quantity) => {
   };
 };
 
-export const incProductQuantity = item => {
+export const incProductQuantity = (item: any) => {
   return {
     type: INC_PRODUCT_QUANTITY,
     item: item
   };
 };
 
-export const decProductQuantity = item => {
+export const decProductQuantity = (item: any) => {
   return {
     type: DEC_PRODUCT_QUANTITY,
     item: item
@@ -105,7 +109,7 @@ export const calculateCart = () => {
   };
 };
 
-export const setShipping = value => {
+export const setShipping = (value: string) => {
   return {
     type: SET_SHIPPING,
     value
@@ -124,7 +128,7 @@ export const toggleDifferentBillingAddress = () => {
   };
 };
 
-export const setPayment = value => {
+export const setPayment = (value: string) => {
   return {
     type: SET_PAYMENT,
     value

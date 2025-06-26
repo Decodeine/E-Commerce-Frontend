@@ -1,31 +1,46 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { fetchProducts } from "../../store/actions/storeActions";
-import { Spinner } from "reactstrap";
+import { Spinner } from "react-bootstrap";
 import Product from "./Product";
 import "./css/products.css";
 
-const mapStateToProps = state => {
-  return state.store;
-};
+// Type definitions
+interface ProductItem {
+  id: string | number;
+  slug: string;
+  name: string;
+  price: number;
+  picture: string;
+  quantity: number;
+  [key: string]: any;
+}
 
-class ProductList extends React.Component {
+interface ProductListProps {
+  dispatch: (action: any) => void;
+  loading: boolean;
+  products: ProductItem[];
+}
+
+const mapStateToProps = (state: any) => state.store;
+
+class ProductList extends React.Component<ProductListProps> {
   componentDidMount() {
     this.props.dispatch(fetchProducts());
   }
 
   render() {
-    const { products, loading /* error */ } = this.props;
+    const { products, loading } = this.props;
 
     return loading ? (
       <Spinner
-        color="secondary"
+        animation="border"
+        variant="secondary"
         style={{ width: "3rem", height: "3rem" }}
         className="m-auto"
       />
     ) : (
-      <React.Fragment>
+      <>
         <h1 className="mb-3 text-center">All Products</h1>
         <ul className="grid list-unstyled mb-4">
           {products.map(item => (
@@ -34,15 +49,9 @@ class ProductList extends React.Component {
             </li>
           ))}
         </ul>
-      </React.Fragment>
+      </>
     );
   }
 }
-
-ProductList.propTypes = {
-  dispatch: PropTypes.func.isRequired,
-  loading: PropTypes.bool,
-  products: PropTypes.array
-};
 
 export default connect(mapStateToProps)(ProductList);
