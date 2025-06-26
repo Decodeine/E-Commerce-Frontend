@@ -8,8 +8,8 @@ import {
 import Address from "./Address";
 import Delivery from "./Delivery";
 import Payment from "./Payment";
-import OrderReview from "./OrderReview";
 import OrderFinal from "./OrderFinal";
+import OrderReview from "./OrderReview";
 import OrderSummary from "./OrderSummary";
 import CheckoutNavbar from "./CheckoutNavbar";
 import { Row, Col } from "react-bootstrap";
