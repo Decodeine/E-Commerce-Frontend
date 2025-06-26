@@ -1,5 +1,6 @@
 # ecommerce-frontend
-React+Redux frontend for eCommerce project. 
+This is a modern React + TypeScript e-commerce frontend using Vite, Redux Toolkit, and React Bootstrap.
+ 
 
 Features
 --------
@@ -8,10 +9,22 @@ Features
 
 ## How to set up
 
-For the frontend it is enough to run
+For the frontend it is enough to run `npm start`
 
-`npm install`
 
-to install all dependencies. Then, one can run frontend on `localhost:3000` by running
+## Getting Started
 
-`npm start`
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Build for production:**
+   ```bash
+   npm run build
+   ```
