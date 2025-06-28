@@ -1,11 +1,13 @@
-import React from "react";
-import { connect } from "react-redux";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import OrderSummary from "./OrderSummary";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as actions from "../../store/actions/storeActions";
+import Button from "../UI/Button/Button";
+import Card from "../UI/Card/Card";
 import "./css/cart.css";
-
+import type { AppDispatch } from "../../store/store";
 
 interface CartItem {
   id: string | number;
@@ -17,167 +19,141 @@ interface CartItem {
   [key: string]: any;
 }
 
-interface CartProps {
-  cart: CartItem[];
-  subtotal: number;
-  shipping: string; 
-  tax: number; 
-  addProductToCart: (product: CartItem) => void;
-  removeProductFromCart: (product: CartItem) => void;
-  updateProductQuantity: (product: CartItem, qnt: number) => void;
-  incProductQuantity: (item: CartItem) => void;
-  decProductQuantity: (item: CartItem) => void;
-  emptyCart: () => void;
-  calculateCart: () => void;
-  setShipping: (value: string) => void;
-}
+const Cart: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const cart = useSelector((state: any) => state.store.cart);
+  const subtotal = useSelector((state: any) => state.store.subtotal);
+  const shipping = useSelector((state: any) => state.store.shipping);
+  const tax = useSelector((state: any) => state.store.tax);
 
-const mapStateToProps = (state: any) => ({
-  ...state.store,});
-
-const mapDispatchToProps = (dispatch: any) => ({
-  addProductToCart: (product: CartItem) => dispatch(actions.addProductToCart(product, 1)),
-  removeProductFromCart: (product: CartItem) => dispatch(actions.removeProductFromCart(product)),
-  updateProductQuantity: (product: CartItem, qnt: number) => dispatch(actions.updateProductQuantity(product, qnt)),
-  incProductQuantity: (item: CartItem) => dispatch(actions.incProductQuantity(item)),
-  decProductQuantity: (item: CartItem) => dispatch(actions.decProductQuantity(item)),
-  emptyCart: () => dispatch(actions.emptyCart()),
-  calculateCart: () => dispatch(actions.calculateCart()),
-  setShipping: (value: string) => dispatch(actions.setShipping(value)),
-});
-
-class Cart extends React.Component<CartProps> {
-  calculateCartSetShipping() {
-    this.props.calculateCart();
-    if (this.props.subtotal >= 100) {
-      this.props.setShipping("free");
+  // Calculate cart and set shipping when cart or subtotal changes
+  useEffect(() => {
+    dispatch(actions.calculateCart());
+    if (subtotal >= 100) {
+      dispatch(actions.setShipping("free"));
     } else {
-      this.props.setShipping("standard");
+      dispatch(actions.setShipping("standard"));
     }
-  }
+  }, [dispatch, cart, subtotal]);
 
-  componentDidMount() {
-    this.calculateCartSetShipping();
-  }
-
-  componentDidUpdate(prevProps: CartProps) {
-    if (prevProps.cart !== this.props.cart || prevProps.subtotal !== this.props.subtotal) {
-      this.calculateCartSetShipping();
-    }
-  }
-
-  render() {
-    const { cart } = this.props;
-
-    return cart.length === 0 ? (
-      <React.Fragment>
-        <h3 className="text-center mt-2">
-          Your cart is empty. Why not add something? :)
-        </h3>
-      </React.Fragment>
-    ) : (
-      <React.Fragment>
-        <h3>My Cart</h3>
-        <div className="row">
-          <div className="col-lg-8">
-            <div className="cart">
-              <div className="cart-wrapper">
-                <div className="cart-header text-uppercase text-center font-weight-bold">
-                  <div className="row">
-                    <div className="col-5">Item</div>
-                    <div className="col-2">Price</div>
-                    <div className="ml-1 col-2">Quantity</div>
-                    <div className="col-2">Total</div>
-                    <div className="col-1"> </div>
-                  </div>
-                </div>
-                <div className="border-bottom">
-                  {cart.map((item) => (
-                    <div className="p-4 border-top" key={item.id}>
-                      <div className="row d-flex align-items-center text-center">
-                        <div className="col-5">
-                          <div className="d-flex align-items-center">
-                            <img
-                              className="product-image"
-                              alt={item.name}
-                              src={item.picture}
-                            />
-                            <Link
-                              to={`/product/${item.slug}`}
-                              className="cart-title"
-                            >
-                              {item.name}
-                            </Link>
-                          </div>
-                        </div>
-                        <div className="col-2">£{item.price}</div>
-                        <div className="col-2">
-                          <div className="d-flex align-items-center">
-                            <div
-                              className="p-1"
-                              onClick={() => this.props.decProductQuantity(item)}
-                              style={{ cursor: "pointer" }}
-                            >
-                              <FontAwesomeIcon icon={["far", "minus-square"]} />
-                            </div>
-                            <input
-                              disabled
-                              className="form-control rounded-0"
-                              type="number"
-                              value={item.quantity}
-                            />
-                            <div
-                              className="p-1"
-                              onClick={() => this.props.incProductQuantity(item)}
-                              style={{ cursor: "pointer" }}
-                            >
-                              <FontAwesomeIcon icon={["far", "plus-square"]} />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-2 text-center">
-                          £{(item.price * item.quantity).toFixed(2)}
-                        </div>
-                        <div className="col-1 text-center">
-                          <Link
-                            to="/cart"
-                            onClick={() => this.props.removeProductFromCart(item)}
-                          >
-                            <FontAwesomeIcon
-                              icon={["far", "times-circle"]}
-                              className="text-danger"
-                            />
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="d-flex my-4">
-              <button
-                type="button"
-                className="btn btn-sm btn-danger ml-auto"
-                onClick={() => this.props.emptyCart()}
-              >
-                <FontAwesomeIcon icon="trash-alt" /> Empty cart
-              </button>
-            </div>
-          </div>
-          <div className="col-lg-4">
-  <OrderSummary
-    isCartComponent={true}
-    subtotal={this.props.subtotal}
-    shipping={this.props.shipping}
-    tax={this.props.tax}
-  />
-</div>
-        </div>
-      </React.Fragment>
+  if (cart.length === 0) {
+    return (
+      <div className="text-center mt-5">
+        <Card variant="outlined" padding="xl" className="max-w-md mx-auto">
+          <h3 className="mb-4">Your cart is empty</h3>
+          <p className="text-muted mb-4">Why not add something? :)</p>
+          <Button 
+            as={Link} 
+            to="/" 
+            variant="primary"
+          >
+            <FontAwesomeIcon icon="shopping-bag" /> Continue Shopping
+          </Button>
+        </Card>
+      </div>
     );
   }
-}
 
-export default connect(mapStateToProps, mapDispatchToProps)(Cart);
+  return (
+    <div className="cart-container">
+      <h3>My Cart</h3>
+      <div className="row">
+        <div className="col-lg-8">
+          <Card variant="elevated" padding="lg">
+            <div className="cart-header text-uppercase text-center font-weight-bold mb-3">
+              <div className="row">
+                <div className="col-5">Item</div>
+                <div className="col-2">Price</div>
+                <div className="ml-1 col-2">Quantity</div>
+                <div className="col-2">Total</div>
+                <div className="col-1"> </div>
+              </div>
+            </div>
+            <div className="cart-items">
+              {cart.map((item: CartItem) => (
+                <Card key={item.id} variant="outlined" padding="md" className="mb-3">
+                  <div className="row d-flex align-items-center text-center">
+                    <div className="col-5">
+                      <div className="d-flex align-items-center">
+                        <img
+                          className="product-image"
+                          alt={item.name}
+                          src={item.picture}
+                        />
+                        <Link
+                          to={`/product/${item.slug}`}
+                          className="cart-title"
+                        >
+                          {item.name}
+                        </Link>
+                      </div>
+                    </div>
+                    <div className="col-2">£{item.price}</div>
+                    <div className="col-2">
+                      <div className="d-flex align-items-center justify-content-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => dispatch(actions.decProductQuantity(item))}
+                        >
+                          <FontAwesomeIcon icon={["far", "minus-square"]} />
+                        </Button>
+                        <input
+                          disabled
+                          className="form-control rounded-0 mx-2"
+                          type="number"
+                          value={item.quantity}
+                          style={{ maxWidth: "60px" }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => dispatch(actions.incProductQuantity(item))}
+                        >
+                          <FontAwesomeIcon icon={["far", "plus-square"]} />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="col-2 text-center">
+                      £{(item.price * item.quantity).toFixed(2)}
+                    </div>
+                    <div className="col-1 text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => dispatch(actions.removeProductFromCart(item))}
+                      >
+                        <FontAwesomeIcon icon={["far", "times-circle"]} className="text-danger" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+
+          <div className="d-flex my-4">
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => dispatch(actions.emptyCart())}
+              className="ml-auto"
+            >
+              <FontAwesomeIcon icon="trash-alt" /> Empty cart
+            </Button>
+          </div>
+        </div>
+        <div className="col-lg-4">
+          <OrderSummary
+            isCartComponent={true}
+            subtotal={subtotal}
+            shipping={shipping}
+            tax={tax}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Cart;

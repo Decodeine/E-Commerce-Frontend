@@ -6,6 +6,7 @@ import { authCheckState } from "./store/actions/authActions";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./css/App.css";
+import "./styles/globals.css";
 
 import Navbar from "./components/Misc/Navbar";
 import Footer from "./components/Misc/Footer";
@@ -34,10 +35,8 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as 
 
 // FontAwesome icons
 import { library } from "@fortawesome/fontawesome-svg-core";
+
 import {
-  faCcVisa,
-  faCcMastercard,
-  faCcPaypal,
   faTruck,
   faShoppingCart,
   faUser,
@@ -53,13 +52,17 @@ import {
   faPlusSquare,
   faTimesCircle,
   faAngleLeft,
-  faAngleRight
+  faAngleRight,
 } from "@fortawesome/free-solid-svg-icons";
+
 import {
+  faCcVisa,
+  faCcMastercard,
+  faCcPaypal,
   faFacebookF,
   faTwitter,
   faLinkedin,
-  faPinterest
+  faPinterest,
 } from "@fortawesome/free-brands-svg-icons";
 
 library.add(
@@ -90,7 +93,7 @@ library.add(
 
 // Redux connector
 const mapDispatch = {
-  authCheckState
+  authCheckState,
 };
 
 const connector = connect(null, mapDispatch);
@@ -114,7 +117,14 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
             <Route path="/search/:query" element={<SearchResults />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/about" element={<About />} />
-            <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
+            <Route
+              path="/checkout"
+              element={
+                <PrivateRoute>
+                  <Checkout />
+                </PrivateRoute>
+              }
+            />
             <Route path="*" element={<Default />} />
           </Routes>
         </Container>

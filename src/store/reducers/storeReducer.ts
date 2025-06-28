@@ -2,6 +2,14 @@ import {
   FETCH_PRODUCTS_START,
   FETCH_PRODUCTS_SUCCESS,
   FETCH_PRODUCTS_FAIL,
+  FETCH_FEATURED_PRODUCTS_SUCCESS,
+  FETCH_DEALS_SUCCESS,
+  FETCH_NEW_ARRIVALS_SUCCESS,
+  FETCH_TOP_RATED_SUCCESS,
+  FETCH_BRANDS_SUCCESS,
+  FETCH_CATEGORIES_SUCCESS,
+  SET_FILTERS,
+  SET_PAGINATION,
   ADD_PRODUCT_TO_CART,
   REMOVE_PRODUCT_FROM_CART,
   UPDATE_PRODUCT_QUANTITY,
@@ -16,7 +24,7 @@ import {
 } from "../actions/storeActions";
 
 import { updateObject } from "../utility";
-
+import { Product, Brand, Category, FilterParams } from "../../services/productsApi";
 
 interface CartItem {
   id: string;
@@ -26,7 +34,13 @@ interface CartItem {
 }
 
 interface StoreState {
-  products: CartItem[];
+  products: Product[];
+  featuredProducts: Product[];
+  dealsProducts: Product[];
+  newArrivals: Product[];
+  topRated: Product[];
+  brands: Brand[];
+  categories: Category[];
   loading: boolean;
   error: any;
   cart: CartItem[];
@@ -37,6 +51,14 @@ interface StoreState {
   paymentStatus: string;
   isCheckoutComplete: boolean;
   didPaymentGoThrough: boolean;
+  filters: FilterParams;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
 }
 
 interface Action {
@@ -46,16 +68,30 @@ interface Action {
 
 const initialState: StoreState = {
   products: [],
+  featuredProducts: [],
+  dealsProducts: [],
+  newArrivals: [],
+  topRated: [],
+  brands: [],
+  categories: [],
   loading: false,
   error: null,
   cart: [],
   subtotal: 0,
-  tax: 0.2,
-  shipping: "standard",
+  tax: 0,
+  shipping: "free",
   isDifferentBillingAddress: false,
   paymentStatus: "",
   isCheckoutComplete: false,
-  didPaymentGoThrough: false
+  didPaymentGoThrough: false,
+  filters: {},
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    hasNext: false,
+    hasPrevious: false,
+  },
 };
 
 export const addProductToCart = (state: StoreState, action: Action): StoreState => {
@@ -160,7 +196,10 @@ export default function storeReducer(
       return updateObject(state, { loading: true });
 
     case FETCH_PRODUCTS_SUCCESS:
-      return updateObject(state, { products: action.products, loading: false });
+      return updateObject(state, { 
+        products: action.payload.results || action.payload, 
+        loading: false 
+      });
 
     case FETCH_PRODUCTS_FAIL:
       return updateObject(state, {
@@ -168,6 +207,30 @@ export default function storeReducer(
         loading: false,
         error: action.error
       });
+
+    case FETCH_FEATURED_PRODUCTS_SUCCESS:
+      return updateObject(state, { featuredProducts: action.payload });
+
+    case FETCH_DEALS_SUCCESS:
+      return updateObject(state, { dealsProducts: action.payload });
+
+    case FETCH_NEW_ARRIVALS_SUCCESS:
+      return updateObject(state, { newArrivals: action.payload });
+
+    case FETCH_TOP_RATED_SUCCESS:
+      return updateObject(state, { topRated: action.payload });
+
+    case FETCH_BRANDS_SUCCESS:
+      return updateObject(state, { brands: action.payload });
+
+    case FETCH_CATEGORIES_SUCCESS:
+      return updateObject(state, { categories: action.payload });
+
+    case SET_FILTERS:
+      return updateObject(state, { filters: action.payload });
+
+    case SET_PAGINATION:
+      return updateObject(state, { pagination: action.payload });
 
     case ADD_PRODUCT_TO_CART:
       return addProductToCart(state, action);

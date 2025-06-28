@@ -1,0 +1,81 @@
+.card {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border: none;
+  text-align: left;
+  font-family: var(--font-sans);
+}
+
+/* Variants */
+.card--default {
+  border: 1px solid var(--color-neutral-200);
+}
+
+.card--elevated {
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-neutral-100);
+}
+
+.card--outlined {
+  border: 2px solid var(--color-neutral-200);
+}
+
+/* Padding */
+.card--padding-none {
+  padding: 0;
+}
+
+.card--padding-sm {
+  padding: var(--space-sm);
+}
+
+.card--padding-md {
+  padding: var(--space-md);
+}
+
+.card--padding-lg {
+  padding: var(--space-lg);
+}
+
+.card--padding-xl {
+  padding: var(--space-xl);
+}
+
+/* Interactive states */
+.card--hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card--clickable {
+  cursor: pointer;
+}
+
+.card--clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card--clickable:active {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.card--clickable:focus {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .card {
+  background-color: var(--color-neutral-800);
+  border-color: var(--color-neutral-700);
+}
+
+[data-theme="dark"] .card--elevated {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+}

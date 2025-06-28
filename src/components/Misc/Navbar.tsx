@@ -1,48 +1,36 @@
 import React, { useState } from "react";
-import { connect } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import SearchForm from "../Products/SearchForm";
 import jwt_decode from "jwt-decode";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { 
+  faTruck, 
+  faShoppingCart, 
+  faUser, 
+  faSignInAlt, 
+  faSignOutAlt, 
+  faUserPlus 
+} from "@fortawesome/free-solid-svg-icons";
 import {
   Navbar as RBNavbar,
   Container,
   Nav,
-  NavDropdown,
   ButtonGroup,
-  Button,
 } from "react-bootstrap";
 import { authLogout } from "../../store/actions/authActions";
+import Button from "../UI/Button/Button";
 import "./css/navbar.css";
 
-// Types
-interface NavbarProps {
-  cart: { quantity: number }[];
-  token: string | null;
-  isAuthenticated: boolean;
-  authLogout: () => void;
-}
-
-const mapStateToProps = (state: any) => ({
-  cart: state.store.cart,
-  token: state.auth.token,
-  isAuthenticated: state.auth.token !== null,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-  authLogout: () => dispatch(authLogout()),
-});
-
-const Navbar: React.FC<NavbarProps> = ({
-  cart,
-  token,
-  isAuthenticated,
-  authLogout,
-}) => {
+const Navbar: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
+  const dispatch = useDispatch();
+  const cart = useSelector((state: any) => state.store.cart);
+  const token = useSelector((state: any) => state.auth.token);
+  const isAuthenticated = token !== null;
 
   const cartItemCount = () =>
-    cart.reduce((total, item) => total + item.quantity, 0);
+    cart.reduce((total: number, item: any) => total + item.quantity, 0);
 
   let decoded_token: any = undefined;
   if (token) {
@@ -52,7 +40,7 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       <div className="bg-light text-center text-dark py-1">
-        <FontAwesomeIcon icon="truck" />{" "}
+        <FontAwesomeIcon icon={faTruck} />{" "}
         <em>Free delivery on orders over £100!</em>
       </div>
       <RBNavbar
@@ -74,13 +62,16 @@ const Navbar: React.FC<NavbarProps> = ({
           />
           <RBNavbar.Collapse id="main-navbar">
             <Nav className="align-items-center justify-content-center flex-grow-1">
+              <Nav.Link as={Link} to="/about" className="text-light mx-2">
+                About
+              </Nav.Link>
               <div id="searchBox">
                 <SearchForm />
               </div>
             </Nav>
             <Nav className="ml-auto align-items-center justify-content-center">
               <Nav.Link as={Link} to="/cart" className="text-light">
-                <FontAwesomeIcon icon="shopping-cart" />
+                <FontAwesomeIcon icon={faShoppingCart} />
                 <span className="font-weight-bold"> Cart</span> ({cartItemCount()})
               </Nav.Link>
             </Nav>
@@ -91,23 +82,37 @@ const Navbar: React.FC<NavbarProps> = ({
                     {decoded_token?.username
                       ? decoded_token.username
                       : decoded_token?.email}{" "}
-                    <FontAwesomeIcon icon="user" />
+                    <FontAwesomeIcon icon={faUser} />
                   </Link>
                   <Button
-                    className="btn btn-sm btn-warning"
-                    onClick={authLogout}
+                    variant="warning"
+                    size="sm"
+                    onClick={() => dispatch(authLogout())}
+                    icon={<FontAwesomeIcon icon={faSignOutAlt} />}
                   >
-                    Logout <FontAwesomeIcon icon="sign-out-alt" />
+                    Logout
                   </Button>
                 </ButtonGroup>
               ) : (
                 <ButtonGroup>
-                  <Link to="/login" className="btn btn-sm btn-warning">
-                    Login <FontAwesomeIcon icon="sign-in-alt" />
-                  </Link>
-                  <Link to="/register" className="btn btn-sm btn-info">
-                    Register <FontAwesomeIcon icon="user-plus" />
-                  </Link>
+                  <Button
+                    as={Link}
+                    to="/login"
+                    variant="warning"
+                    size="sm"
+                    icon={<FontAwesomeIcon icon={faSignInAlt} />}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    as={Link}
+                    to="/register"
+                    variant="secondary"
+                    size="sm"
+                    icon={<FontAwesomeIcon icon={faUserPlus} />}
+                  >
+                    Register
+                  </Button>
                 </ButtonGroup>
               )}
             </Nav>
@@ -118,4 +123,4 @@ const Navbar: React.FC<NavbarProps> = ({
   );
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Navbar);
+export default Navbar;

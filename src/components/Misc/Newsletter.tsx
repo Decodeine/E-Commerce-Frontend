@@ -19,23 +19,25 @@ const Newsletter: React.FC = () => {
   };
 
   return (
-    <>
-      <h5 className="font-weight-bold">Subscribe to our newsletter!</h5>
-      <Form className="d-flex justify-content-center" onSubmit={handleSubmit}>
-        <InputGroup>
+    <div>
+      <h5 className="font-weight-bold mb-3">Newsletter</h5>
+      <p className="text-muted mb-3">Get updates on new products and exclusive offers!</p>
+      <Form onSubmit={handleSubmit}>
+        <InputGroup className="mb-2">
           <FormControl
             type="email"
             placeholder="Your email address"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
+            className="rounded-left"
           />
-          <Button variant="secondary" type="submit">
-            Subscribe! <FontAwesomeIcon icon="paper-plane" />
+          <Button variant="primary" type="submit" className="rounded-right">
+            <FontAwesomeIcon icon="paper-plane" />
           </Button>
         </InputGroup>
       </Form>
-    </>
+    </div>
   );
 };
 

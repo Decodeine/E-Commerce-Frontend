@@ -1,5 +1,5 @@
-import React from "react";
-import { connect } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   setPayment,
   toggleCheckoutComplete,
@@ -14,38 +14,7 @@ import OrderSummary from "./OrderSummary";
 import CheckoutNavbar from "./CheckoutNavbar";
 import { Row, Col } from "react-bootstrap";
 import "./css/checkout.css";
-
-// Types
-interface StoreState {
-  cart: any[];
-  subtotal: number;
-  tax: number;
-  shipping: string;
-  isCheckoutComplete: boolean;
-}
-
-interface CheckoutProps {
-  store: StoreState;
-  isAuthenticated: boolean;
-  setPayment: (value: string) => void;
-  emptyCart: () => void;
-  toggleCheckoutComplete: () => void;
-}
-
-interface CheckoutState {
-  page: number;
-}
-
-const mapStateToProps = (state: any) => ({
-  store: state.store,
-  isAuthenticated: state.auth.token !== null,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-  setPayment: (value: string) => dispatch(setPayment(value)),
-  emptyCart: () => dispatch(emptyCart()),
-  toggleCheckoutComplete: () => dispatch(toggleCheckoutComplete()),
-});
+import type { AppDispatch } from "../../store/store";
 
 const mapShippingStringToNumeric = (value: string): number => {
   switch (value) {
@@ -59,110 +28,102 @@ const mapShippingStringToNumeric = (value: string): number => {
   }
 };
 
-class Checkout extends React.Component<CheckoutProps, CheckoutState> {
-  constructor(props: CheckoutProps) {
-    super(props);
-    this.state = { page: 1 };
-    this.nextPage = this.nextPage.bind(this);
-    this.previousPage = this.previousPage.bind(this);
-    this.handlePayment = this.handlePayment.bind(this);
-  }
+const Checkout: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { cart, subtotal, tax, shipping, isCheckoutComplete } = useSelector(
+    (state: any) => state.store
+  );
+  const isAuthenticated = useSelector((state: any) => state.auth.token !== null);
 
-  componentDidMount() {
-    const { cart } = this.props.store;
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
     try {
       const serializedCart = JSON.stringify(cart);
       localStorage.setItem("cart", serializedCart);
     } catch (err) {
       console.log(err);
     }
-  }
+    // Cleanup on unmount
+    return () => {
+      if (isCheckoutComplete) dispatch(toggleCheckoutComplete());
+      dispatch(setPayment(""));
+    };
+    // eslint-disable-next-line
+  }, [cart, dispatch, isCheckoutComplete]);
 
-  componentWillUnmount() {
-    if (this.props.store.isCheckoutComplete) this.props.toggleCheckoutComplete();
-    this.props.setPayment("");
-  }
+  const nextPage = () => setPage((prev) => prev + 1);
+  const previousPage = () => setPage((prev) => prev - 1);
 
-  nextPage() {
-    this.setState((prev) => ({ page: prev.page + 1 }));
-  }
-
-  previousPage() {
-    this.setState((prev) => ({ page: prev.page - 1 }));
-  }
-
-  calculateTotal() {
-    const { subtotal, tax, shipping } = this.props.store;
+  const calculateTotal = () => {
     const shippingNumeric = mapShippingStringToNumeric(shipping);
     const afterTax = tax * subtotal;
     return parseFloat((subtotal + afterTax + shippingNumeric).toFixed(2));
-  }
+  };
 
-  handlePayment(/* values: any */) {
+  const handlePayment = () => {
     // Integrate Paystack or other payment logic here
-    this.props.setPayment("success");
-    this.props.emptyCart();
-    this.props.toggleCheckoutComplete();
+    dispatch(setPayment("success"));
+    dispatch(emptyCart());
+    dispatch(toggleCheckoutComplete());
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="d-flex flex-column align-items-center justify-content-center">
+        <h1 className="font-weight-bold">
+          You must be logged in to view this page.
+        </h1>
+      </div>
+    );
   }
 
-  render() {
-    const { page } = this.state;
-    const { cart, isCheckoutComplete } = this.props.store;
-    const { isAuthenticated } = this.props;
+  if (isCheckoutComplete) {
+    return <OrderFinal />;
+  }
 
-    if (!isAuthenticated) {
-      return (
-        <div className="d-flex flex-column align-items-center justify-content-center">
-          <h1 className="font-weight-bold">
-            You must be logged in to view this page.
-          </h1>
-        </div>
-      );
-    }
-
-    if (isCheckoutComplete) {
-      return <OrderFinal />;
-    }
-
-    if (cart.length === 0) {
-      return (
-        <React.Fragment>
-          <h3 className="text-center mt-2">
-            Add some products to the cart first, then come back here :)
-          </h3>
-        </React.Fragment>
-      );
-    }
-
+  if (cart.length === 0) {
     return (
       <React.Fragment>
-        <h3 className="mb-4">Checkout</h3>
-        <Row>
-          <Col lg={8}>
-            <CheckoutNavbar active={page} />
-            {page === 1 && <Address onSubmit={this.nextPage} />}
-            {page === 2 && (
-              <Delivery previousPage={this.previousPage} onSubmit={this.nextPage} />
-            )}
-            {page === 3 && (
-              <OrderReview previousPage={this.previousPage} onSubmit={this.nextPage} />
-            )}
-            {page === 4 && (
-              <Payment previousPage={this.previousPage} onSubmit={this.handlePayment} />
-            )}
-          </Col>
-          <Col lg={4}>
-            <OrderSummary
-              subtotal={this.props.store.subtotal}
-              shipping={this.props.store.shipping}
-              tax={this.props.store.tax}
-              isCartComponent={false}
-            />
-          </Col>
-        </Row>
+        <h3 className="text-center mt-2">
+          Add some products to the cart first, then come back here :)
+        </h3>
       </React.Fragment>
     );
   }
-}
 
-export default connect(mapStateToProps, mapDispatchToProps)(Checkout);
+  return (
+    <React.Fragment>
+      <h3 className="mb-4">Checkout</h3>
+      <Row>
+        <Col lg={8}>
+          <CheckoutNavbar active={page} />
+          {page === 1 && <Address onSubmit={nextPage} />}
+          {page === 2 && (
+            <Delivery previousPage={previousPage} onSubmit={nextPage} />
+          )}
+          {page === 3 && (
+            <OrderReview
+              cart={cart}
+              previousPage={previousPage}
+              handleSubmit={nextPage}
+            />
+          )}
+          {page === 4 && (
+            <Payment previousPage={previousPage} onSubmit={handlePayment} />
+          )}
+        </Col>
+        <Col lg={4}>
+          <OrderSummary
+            subtotal={subtotal}
+            shipping={shipping}
+            tax={tax}
+            isCartComponent={false}
+          />
+        </Col>
+      </Row>
+    </React.Fragment>
+  );
+};
+
+export default Checkout;

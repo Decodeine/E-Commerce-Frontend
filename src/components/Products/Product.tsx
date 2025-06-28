@@ -1,14 +1,12 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { connect } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import {
   addProductToCart,
   removeProductFromCart
 } from "../../store/actions/storeActions";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "./css/products.css";
+import ProductCard from "./ProductCard";
 
-// Type definitions
+// Type definitions for the legacy product item structure
 interface ProductItem {
   id: string | number;
   slug: string;
@@ -16,85 +14,56 @@ interface ProductItem {
   price: number;
   picture: string;
   quantity: number;
+  sale_price?: number;
+  rating?: number;
+  reviews_count?: number;
   [key: string]: any;
 }
 
 interface ProductProps {
   item: ProductItem;
-  cart: ProductItem[];
-  addProductToCart: (item: ProductItem) => void;
-  removeProductFromCart: (item: ProductItem) => void;
 }
 
-const mapStateToProps = (state: any) => ({
-  cart: state.store.cart
-});
+const Product: React.FC<ProductProps> = ({ item }) => {
+  const dispatch = useDispatch();
+  const cart = useSelector((state: any) => state.store.cart);
 
-const mapDispatchToProps = (dispatch: any) => ({
-  addProductToCart: (item: ProductItem) => dispatch(addProductToCart(item, 1)),
-  removeProductFromCart: (item: ProductItem) => dispatch(removeProductFromCart(item))
-});
-
-class Product extends React.Component<ProductProps> {
-  inCart = () => {
-    const { item, cart } = this.props;
-    const res = cart.find(e => e.id === item.id);
+  // Check if product is in cart
+  const inCart = () => {
+    const res = cart.find((e: ProductItem) => e.id === item.id);
     return res ? res.quantity : 0;
   };
 
-  render() {
-    const { item } = this.props;
+  // Convert legacy item structure to modern product structure for ProductCard
+  const product = {
+    id: typeof item.id === 'string' ? parseInt(item.id) : item.id,
+    name: item.name,
+    slug: item.slug,
+    price: item.price,
+    sale_price: item.sale_price,
+    image: item.picture,
+    rating: item.rating,
+    reviews_count: item.reviews_count,
+    in_stock: item.quantity > 0
+  };
 
-    return (
-      <div className="card rounded-0 shadow">
-        <Link to={`/product/${item.slug}`} className="text-dark">
-          <img
-            className="card-img-top rounded-0"
-            src={item.picture}
-            alt={item.name}
-          />
-        </Link>
-        <div className="d-flex flex-column card-body">
-          <h5 className="card-text">{item.name}</h5>
-          <p className="card-text">
-            <strong>Price: £{item.price}</strong>
-          </p>
-          <div className="d-flex flex-row justify-content-center">
-            {item.quantity === 0 ? (
-              <strong>Out of stock</strong>
-            ) : (
-              <div>
-                <button
-                  type="button"
-                  className="btn btn-success"
-                  onClick={() => this.props.addProductToCart(item)}
-                >
-                  <FontAwesomeIcon icon="cart-plus" />
-                  {this.inCart() > 0 ? (
-                    <span className="ml-2 font-weight-bold">
-                      {this.inCart()}
-                    </span>
-                  ) : null}
-                </button>
-                {this.inCart() > 0 ? (
-                  <button
-                    type="button"
-                    className="btn btn-danger ml-1"
-                    onClick={() => this.props.removeProductFromCart(item)}
-                  >
-                    <FontAwesomeIcon icon="trash-alt" />
-                  </button>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
+  const handleAddToCart = (productId: number) => {
+    dispatch(addProductToCart(item, 1));
+  };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Product);
+  const handleToggleWishlist = (productId: number) => {
+    // TODO: Implement wishlist functionality when available
+    console.log('Wishlist toggle for product:', productId);
+  };
+
+  return (
+    <ProductCard
+      product={product}
+      onAddToCart={handleAddToCart}
+      onToggleWishlist={handleToggleWishlist}
+      isInWishlist={false} // TODO: Implement wishlist state when available
+    />
+  );
+};
+
+export default Product;

@@ -21,6 +21,9 @@
 .env.test.local
 .env.production.local
 
+# roadmap and planning files
+FRONTEND_ROADMAP.md
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

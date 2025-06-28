@@ -1,18 +1,12 @@
 import React from "react";
-import { connect } from "react-redux";
+import { useSelector } from "react-redux";
 import OrderFinalSuccess from "./OrderFinalSuccess";
 import OrderFinalCancelled from "./OrderFinalCancelled";
 import OrderFinalFailure from "./OrderFinalFailure";
 
-interface OrderFinalProps {
-  paymentStatus?: string;
-}
+const OrderFinal: React.FC = () => {
+  const paymentStatus = useSelector((state: any) => state.store.paymentStatus);
 
-const mapStateToProps = (state: any) => ({
-  paymentStatus: state.store.paymentStatus,
-});
-
-const OrderFinal: React.FC<OrderFinalProps> = ({ paymentStatus }) => {
   switch (paymentStatus) {
     case "success":
       return <OrderFinalSuccess />;
@@ -23,4 +17,4 @@ const OrderFinal: React.FC<OrderFinalProps> = ({ paymentStatus }) => {
   }
 };
 
-export default connect(mapStateToProps)(OrderFinal);
+export default OrderFinal;
