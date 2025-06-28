@@ -366,6 +366,179 @@ class ProductsAPI {
     });
     return response.data;
   }
+
+  // Wishlist APIs
+  async getWishlist(token: string): Promise<any[]> {
+    const response = await axios.get(`${this.baseUrl}wishlist/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  }
+
+  async addToWishlist(productId: number, token: string): Promise<any> {
+    const response = await axios.post(`${this.baseUrl}wishlist/`, 
+      { product: productId },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async removeFromWishlist(wishlistItemId: number, token: string): Promise<void> {
+    await axios.delete(`${this.baseUrl}wishlist/${wishlistItemId}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async updateWishlistItem(wishlistItemId: number, data: any, token: string): Promise<any> {
+    const response = await axios.patch(`${this.baseUrl}wishlist/${wishlistItemId}/`, 
+      data,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  // Price Alerts APIs
+  async getPriceAlerts(token: string): Promise<any[]> {
+    const response = await axios.get(`${this.baseUrl}price-alerts/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  }
+
+  async createPriceAlert(data: { product: number; target_price: number }, token: string): Promise<any> {
+    const response = await axios.post(`${this.baseUrl}price-alerts/`, 
+      data,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async updatePriceAlert(alertId: number, data: any, token: string): Promise<any> {
+    const response = await axios.patch(`${this.baseUrl}price-alerts/${alertId}/`, 
+      data,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async deletePriceAlert(alertId: number, token: string): Promise<void> {
+    await axios.delete(`${this.baseUrl}price-alerts/${alertId}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  // Product Comparison APIs
+  async getComparison(productIds: number[]): Promise<any[]> {
+    const response = await axios.get(`${this.baseUrl}compare/`, {
+      params: {
+        products: productIds.join(','),
+      },
+    });
+    return response.data;
+  }
+
+  async addToComparison(productId: number): Promise<any> {
+    const response = await axios.post(`${this.baseUrl}compare/add/`, {
+      product: productId,
+    });
+    return response.data;
+  }
+
+  async removeFromComparison(productId: number): Promise<void> {
+    await axios.post(`${this.baseUrl}compare/remove/`, {
+      product: productId,
+    });
+  }
+
+  async clearComparison(): Promise<void> {
+    await axios.post(`${this.baseUrl}compare/clear/`);
+  }
+
+  // Product Reviews APIs
+  async getProductReviews(productId: number, params?: any): Promise<any> {
+    const response = await axios.get(`${this.baseUrl}products/${productId}/reviews/`, {
+      params,
+    });
+    return response.data;
+  }
+
+  async createReview(productId: number, data: any, token: string): Promise<any> {
+    const response = await axios.post(`${this.baseUrl}products/${productId}/reviews/`, 
+      data,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async updateReview(productId: number, reviewId: number, data: any, token: string): Promise<any> {
+    const response = await axios.patch(`${this.baseUrl}products/${productId}/reviews/${reviewId}/`, 
+      data,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async deleteReview(productId: number, reviewId: number, token: string): Promise<void> {
+    await axios.delete(`${this.baseUrl}products/${productId}/reviews/${reviewId}/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  }
+
+  async markReviewHelpful(productId: number, reviewId: number, token?: string): Promise<any> {
+    const headers: any = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await axios.post(`${this.baseUrl}products/${productId}/reviews/${reviewId}/helpful/`, 
+      {},
+      { headers }
+    );
+    return response.data;
+  }
 }
 
 // Export singleton instance

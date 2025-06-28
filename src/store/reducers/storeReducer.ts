@@ -20,7 +20,34 @@ import {
   SET_SHIPPING,
   TOGGLE_CHECKOUT_COMPLETE,
   TOGGLE_DIFFERENT_BILLING_ADDRESS,
-  SET_PAYMENT
+  SET_PAYMENT,
+  // Wishlist actions
+  FETCH_WISHLIST_START,
+  FETCH_WISHLIST_SUCCESS,
+  FETCH_WISHLIST_FAIL,
+  ADD_TO_WISHLIST_SUCCESS,
+  REMOVE_FROM_WISHLIST_SUCCESS,
+  UPDATE_WISHLIST_ITEM_SUCCESS,
+  // Price Alerts actions
+  FETCH_PRICE_ALERTS_START,
+  FETCH_PRICE_ALERTS_SUCCESS,
+  FETCH_PRICE_ALERTS_FAIL,
+  CREATE_PRICE_ALERT_SUCCESS,
+  UPDATE_PRICE_ALERT_SUCCESS,
+  DELETE_PRICE_ALERT_SUCCESS,
+  // Product Comparison actions
+  FETCH_COMPARISON_SUCCESS,
+  ADD_TO_COMPARISON_SUCCESS,
+  REMOVE_FROM_COMPARISON_SUCCESS,
+  CLEAR_COMPARISON,
+  // Product Reviews actions
+  FETCH_PRODUCT_REVIEWS_START,
+  FETCH_PRODUCT_REVIEWS_SUCCESS,
+  FETCH_PRODUCT_REVIEWS_FAIL,
+  CREATE_REVIEW_SUCCESS,
+  UPDATE_REVIEW_SUCCESS,
+  DELETE_REVIEW_SUCCESS,
+  MARK_REVIEW_HELPFUL_SUCCESS
 } from "../actions/storeActions";
 
 import { updateObject } from "../utility";
@@ -59,6 +86,17 @@ interface StoreState {
     hasNext: boolean;
     hasPrevious: boolean;
   };
+  // New Option B features
+  wishlist: any[];
+  wishlistLoading: boolean;
+  wishlistError: any;
+  priceAlerts: any[];
+  priceAlertsLoading: boolean;
+  priceAlertsError: any;
+  comparison: Product[];
+  productReviews: any[];
+  reviewsLoading: boolean;
+  reviewsError: any;
 }
 
 interface Action {
