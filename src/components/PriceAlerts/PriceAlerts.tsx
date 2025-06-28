@@ -6,8 +6,8 @@ import {
   faPlus, 
   faTrash, 
   faEdit,
-  faTrendDown,
-  faTrendUp,
+  faArrowDown,
+  faArrowUp,
   faCheck,
   faTimes
 } from '@fortawesome/free-solid-svg-icons';
@@ -322,12 +322,12 @@ const PriceAlerts: React.FC = () => {
                     <div className="price-difference">
                       {priceChange.change > 0 ? (
                         <span className="price-higher">
-                          <FontAwesomeIcon icon={faTrendUp} />
+                          <FontAwesomeIcon icon={faArrowUp} />
                           ${Math.abs(priceChange.change).toFixed(2)} above target
                         </span>
                       ) : (
                         <span className="price-lower">
-                          <FontAwesomeIcon icon={faTrendDown} />
+                          <FontAwesomeIcon icon={faArrowDown} />
                           ${Math.abs(priceChange.change).toFixed(2)} below target
                         </span>
                       )}

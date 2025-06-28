@@ -692,7 +692,7 @@ export const markReviewHelpful = (productId: number, reviewId: number): ThunkAct
     const { auth } = getState() as RootState;
 
     try {
-      await productsApi.markReviewHelpful(productId, reviewId, auth.token);
+      await productsApi.markReviewHelpful(productId, reviewId, auth.token || undefined);
       dispatch(markReviewHelpfulSuccess(reviewId));
     } catch (err: any) {
       console.error('Failed to mark review as helpful:', err);

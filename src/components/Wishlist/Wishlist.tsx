@@ -9,7 +9,6 @@ import {
   faEye,
   faStar
 } from '@fortawesome/free-solid-svg-icons';
-import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
 import ProductCard from '../Products/ProductCard';
@@ -104,7 +103,7 @@ const Wishlist: React.FC = () => {
       <div className="wishlist-container">
         <Card className="auth-required-card" padding="xl">
           <div className="auth-required-content">
-            <FontAwesomeIcon icon={faHeartRegular} className="auth-icon" />
+            <FontAwesomeIcon icon={faHeart} className="auth-icon" />
             <h2>Sign in to view your wishlist</h2>
             <p>Save your favorite products and never lose track of them!</p>
             <Button variant="primary" size="lg">
@@ -132,7 +131,7 @@ const Wishlist: React.FC = () => {
       <div className="wishlist-container">
         <Card className="empty-wishlist-card" padding="xl">
           <div className="empty-wishlist-content">
-            <FontAwesomeIcon icon={faHeartRegular} className="empty-icon" />
+            <FontAwesomeIcon icon={faHeart} className="empty-icon" />
             <h2>Your wishlist is empty</h2>
             <p>Start adding products you love to keep track of them!</p>
             <Button variant="primary" size="lg">

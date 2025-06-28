@@ -130,6 +130,17 @@ const initialState: StoreState = {
     hasNext: false,
     hasPrevious: false,
   },
+  // New Option B features
+  wishlist: [],
+  wishlistLoading: false,
+  wishlistError: null,
+  priceAlerts: [],
+  priceAlertsLoading: false,
+  priceAlertsError: null,
+  comparison: [],
+  productReviews: [],
+  reviewsLoading: false,
+  reviewsError: null,
 };
 
 export const addProductToCart = (state: StoreState, action: Action): StoreState => {
@@ -302,6 +313,135 @@ export default function storeReducer(
 
     case SET_PAYMENT:
       return setPayment(state, action);
+
+    // Wishlist reducers
+    case FETCH_WISHLIST_START:
+      return updateObject(state, { wishlistLoading: true, wishlistError: null });
+
+    case FETCH_WISHLIST_SUCCESS:
+      return updateObject(state, { 
+        wishlist: action.payload, 
+        wishlistLoading: false, 
+        wishlistError: null 
+      });
+
+    case FETCH_WISHLIST_FAIL:
+      return updateObject(state, { 
+        wishlist: [], 
+        wishlistLoading: false, 
+        wishlistError: action.error 
+      });
+
+    case ADD_TO_WISHLIST_SUCCESS:
+      return updateObject(state, { 
+        wishlist: [...state.wishlist, action.payload] 
+      });
+
+    case REMOVE_FROM_WISHLIST_SUCCESS:
+      return updateObject(state, { 
+        wishlist: state.wishlist.filter(item => item.id !== action.payload) 
+      });
+
+    case UPDATE_WISHLIST_ITEM_SUCCESS:
+      return updateObject(state, { 
+        wishlist: state.wishlist.map(item => 
+          item.id === action.payload.id ? action.payload : item
+        ) 
+      });
+
+    // Price Alerts reducers
+    case FETCH_PRICE_ALERTS_START:
+      return updateObject(state, { priceAlertsLoading: true, priceAlertsError: null });
+
+    case FETCH_PRICE_ALERTS_SUCCESS:
+      return updateObject(state, { 
+        priceAlerts: action.payload, 
+        priceAlertsLoading: false, 
+        priceAlertsError: null 
+      });
+
+    case FETCH_PRICE_ALERTS_FAIL:
+      return updateObject(state, { 
+        priceAlerts: [], 
+        priceAlertsLoading: false, 
+        priceAlertsError: action.error 
+      });
+
+    case CREATE_PRICE_ALERT_SUCCESS:
+      return updateObject(state, { 
+        priceAlerts: [...state.priceAlerts, action.payload] 
+      });
+
+    case UPDATE_PRICE_ALERT_SUCCESS:
+      return updateObject(state, { 
+        priceAlerts: state.priceAlerts.map(alert => 
+          alert.id === action.payload.id ? action.payload : alert
+        ) 
+      });
+
+    case DELETE_PRICE_ALERT_SUCCESS:
+      return updateObject(state, { 
+        priceAlerts: state.priceAlerts.filter(alert => alert.id !== action.payload) 
+      });
+
+    // Product Comparison reducers
+    case FETCH_COMPARISON_SUCCESS:
+      return updateObject(state, { comparison: action.payload });
+
+    case ADD_TO_COMPARISON_SUCCESS:
+      return updateObject(state, { 
+        comparison: [...state.comparison, action.payload] 
+      });
+
+    case REMOVE_FROM_COMPARISON_SUCCESS:
+      return updateObject(state, { 
+        comparison: state.comparison.filter(product => product.id !== action.payload) 
+      });
+
+    case CLEAR_COMPARISON:
+      return updateObject(state, { comparison: [] });
+
+    // Product Reviews reducers
+    case FETCH_PRODUCT_REVIEWS_START:
+      return updateObject(state, { reviewsLoading: true, reviewsError: null });
+
+    case FETCH_PRODUCT_REVIEWS_SUCCESS:
+      return updateObject(state, { 
+        productReviews: action.payload, 
+        reviewsLoading: false, 
+        reviewsError: null 
+      });
+
+    case FETCH_PRODUCT_REVIEWS_FAIL:
+      return updateObject(state, { 
+        productReviews: [], 
+        reviewsLoading: false, 
+        reviewsError: action.error 
+      });
+
+    case CREATE_REVIEW_SUCCESS:
+      return updateObject(state, { 
+        productReviews: [...state.productReviews, action.payload] 
+      });
+
+    case UPDATE_REVIEW_SUCCESS:
+      return updateObject(state, { 
+        productReviews: state.productReviews.map(review => 
+          review.id === action.payload.id ? action.payload : review
+        ) 
+      });
+
+    case DELETE_REVIEW_SUCCESS:
+      return updateObject(state, { 
+        productReviews: state.productReviews.filter(review => review.id !== action.payload) 
+      });
+
+    case MARK_REVIEW_HELPFUL_SUCCESS:
+      return updateObject(state, { 
+        productReviews: state.productReviews.map(review => 
+          review.id === action.payload ? { ...review, helpful_count: review.helpful_count + 1 } : review
+        ) 
+      });
 
     default:
       return state;
