@@ -1,7 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCartPlus, faHeart } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faCartPlus, faEye } from '@fortawesome/free-solid-svg-icons';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { addProductToCart } from '../../store/actions/storeActions';
+import { useToast } from '../UI/Toast/ToastProvider'; // Add this import
 import Card from '../UI/Card/Card';
 import Button from '../UI/Button/Button';
 import './css/ProductCard.css';
@@ -9,13 +12,13 @@ import './css/ProductCard.css';
 interface Product {
   id: number;
   name: string;
-  slug: string;
   price: number;
   sale_price?: number;
-  image: string;
+  image?: string;
   rating?: number;
   reviews_count?: number;
   in_stock?: boolean;
+  slug: string;
 }
 
 interface ProductCardProps {
@@ -31,109 +34,114 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onToggleWishlist,
   isInWishlist = false
 }) => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { showToast } = useToast(); // Add toast hook
 
-  const handleCardClick = () => {
-    navigate(`/product/${product.slug}`);
+  const handleAddToCart = () => {
+    if (onAddToCart) {
+      onAddToCart(product.id);
+    } else {
+      dispatch(addProductToCart(product, 1));
+    }
+    
+    // Add toast notification
+    showToast({
+      type: 'success',
+      title: 'Added to Cart!',
+      message: `${product.name} has been added to your cart.`,
+      duration: 3000
+    });
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAddToCart?.(product.id);
+  const handleToggleWishlist = () => {
+    if (onToggleWishlist) {
+      onToggleWishlist(product.id);
+      
+      // Add toast notification
+      showToast({
+        type: isInWishlist ? 'info' : 'success',
+        title: isInWishlist ? 'Removed from Wishlist' : 'Added to Wishlist!',
+        message: `${product.name} has been ${isInWishlist ? 'removed from' : 'added to'} your wishlist.`,
+        duration: 3000
+      });
+    }
   };
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleWishlist?.(product.id);
+  const handleViewProduct = () => {
+    navigate(`/products/${product.slug}`);
   };
-
-  const discountPercentage = product.sale_price 
-    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
-    : 0;
-
-  const displayPrice = product.sale_price || product.price;
-  const inStock = product.in_stock ?? true;
 
   return (
-    <Card 
-      className="product-card" 
-      variant="elevated" 
-      padding="none"
-      hover
-      clickable
-      onClick={handleCardClick}
-    >
-      <div className="product-card__image-container">
+    <Card variant="elevated" className="product-card">
+      <div className="product-card__image">
         <img 
-          src={product.image} 
+          src={product.image || '/images/placeholder-product.jpg'} 
           alt={product.name}
-          className="product-card__image"
-          loading="lazy"
+          onClick={handleViewProduct}
         />
-        
-        {discountPercentage > 0 && (
-          <div className="product-card__badge product-card__badge--sale">
-            -{discountPercentage}%
-          </div>
-        )}
-        
-        {!inStock && (
-          <div className="product-card__badge product-card__badge--out-of-stock">
-            Out of Stock
-          </div>
-        )}
-
-        <button
-          className={`product-card__wishlist-btn ${isInWishlist ? 'product-card__wishlist-btn--active' : ''}`}
-          onClick={handleToggleWishlist}
-          aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <FontAwesomeIcon icon={faHeart} />
-        </button>
+        <div className="product-card__overlay">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleViewProduct}
+            className="overlay-btn"
+            aria-label={`View ${product.name}`}
+          >
+            <FontAwesomeIcon icon={faEye} />
+          </Button>
+        </div>
       </div>
-
+      
       <div className="product-card__content">
-        <h3 className="product-card__title">{product.name}</h3>
+        <h3 className="product-card__title" onClick={handleViewProduct}>
+          {product.name}
+        </h3>
+        
+        <div className="product-card__price">
+          {product.sale_price ? (
+            <>
+              <span className="current-price">${product.sale_price.toFixed(2)}</span>
+              <span className="original-price">${product.price.toFixed(2)}</span>
+            </>
+          ) : (
+            <span className="current-price">${product.price.toFixed(2)}</span>
+          )}
+        </div>
         
         {product.rating && (
           <div className="product-card__rating">
-            <div className="product-card__stars">
-              {[...Array(5)].map((_, i) => (
-                <span 
-                  key={i} 
-                  className={`product-card__star ${i < Math.floor(product.rating!) ? 'product-card__star--filled' : ''}`}
-                >
-                  ★
-                </span>
-              ))}
-            </div>
+            <span className="rating-stars">
+              {'★'.repeat(Math.floor(product.rating))}
+              {'☆'.repeat(5 - Math.floor(product.rating))}
+            </span>
+            <span className="rating-value">({product.rating})</span>
             {product.reviews_count && (
-              <span className="product-card__reviews-count">
-                ({product.reviews_count})
-              </span>
+              <span className="reviews-count"> • {product.reviews_count} reviews</span>
             )}
           </div>
         )}
-
-        <div className="product-card__price-container">
-          <span className="product-card__price">${displayPrice.toFixed(2)}</span>
-          {product.sale_price && (
-            <span className="product-card__original-price">
-              ${product.price.toFixed(2)}
-            </span>
-          )}
-        </div>
-
+      </div>
+      
+      <div className="product-card__actions">
         <Button
           variant="primary"
-          size="sm"
-          fullWidth
-          icon={faCartPlus}
-          disabled={!inStock}
           onClick={handleAddToCart}
-          className="product-card__add-to-cart"
+          icon={<FontAwesomeIcon icon={faCartPlus} />}
+          className="add-to-cart-btn"
+          disabled={product.in_stock === false}
         >
-          {inStock ? 'Add to Cart' : 'Out of Stock'}
+          {product.in_stock === false ? 'Out of Stock' : 'Add to Cart'}
+        </Button>
+        
+        <Button
+          variant={isInWishlist ? "danger" : "outline"}
+          onClick={handleToggleWishlist}
+          icon={<FontAwesomeIcon icon={faHeart} />}
+          className="wishlist-btn"
+          aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          {isInWishlist ? 'Remove' : 'Wishlist'}
         </Button>
       </div>
     </Card>

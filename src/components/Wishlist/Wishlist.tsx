@@ -11,6 +11,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
+import Loading from '../UI/Loading/Loading';
+import { useToast } from '../UI/Toast/ToastProvider';
 import ProductCard from '../Products/ProductCard';
 import { fetchWishlist, removeFromWishlist, addProductToCart } from '../../store/actions/storeActions';
 import type { AppDispatch } from '../../store/store';
@@ -38,6 +40,7 @@ const Wishlist: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { wishlist, loading } = useSelector((state: any) => state.store);
   const { isAuthenticated, user } = useSelector((state: any) => state.auth);
+  const { showToast } = useToast();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'added' | 'price' | 'name'>('added');
@@ -51,16 +54,28 @@ const Wishlist: React.FC = () => {
   const handleRemoveFromWishlist = async (itemId: number) => {
     try {
       await dispatch(removeFromWishlist(itemId));
-      // Optionally show success toast
+      showToast({
+        type: 'success',
+        title: 'Removed from Wishlist',
+        message: 'Item has been removed from your wishlist.'
+      });
     } catch (error) {
       console.error('Error removing from wishlist:', error);
-      // Optionally show error toast
+      showToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to remove item from wishlist. Please try again.'
+      });
     }
   };
 
   const handleAddToCart = (product: any) => {
     dispatch(addProductToCart(product, 1));
-    // Optionally show success toast
+    showToast({
+      type: 'success',
+      title: 'Added to Cart',
+      message: `${product.name} has been added to your cart.`
+    });
   };
 
   const handleShareWishlist = () => {
@@ -73,7 +88,11 @@ const Wishlist: React.FC = () => {
     } else {
       // Fallback to copy URL
       navigator.clipboard.writeText(window.location.href);
-      // Show copied toast
+      showToast({
+        type: 'info',
+        title: 'Link Copied',
+        message: 'Wishlist link has been copied to clipboard.'
+      });
     }
   };
 
@@ -118,10 +137,11 @@ const Wishlist: React.FC = () => {
   if (loading) {
     return (
       <div className="wishlist-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <span className="loading-text">Loading your wishlist...</span>
-        </div>
+        <Loading 
+          variant="spinner" 
+          size="lg" 
+          text="Loading your wishlist..." 
+        />
       </div>
     );
   }

@@ -8,6 +8,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./css/App.css";
 import "./styles/globals.css";
 
+import ToastProvider from "./components/UI/Toast/ToastProvider";
 import Navbar from "./components/Misc/Navbar";
 import Footer from "./components/Misc/Footer";
 import About from "./components/Misc/About";
@@ -16,6 +17,9 @@ import Default from "./components/Misc/Default";
 import ProductList from "./components/Products/ProductList";
 import ProductDetails from "./components/Products/ProductDetails";
 import SearchResults from "./components/Products/SearchResults";
+import Wishlist from "./components/Wishlist/Wishlist";
+import PriceAlerts from "./components/PriceAlerts/PriceAlerts";
+import ProductComparison from "./components/Products/ProductComparison";
 
 import Cart from "./components/Checkout/Cart";
 import Checkout from "./components/Checkout/Checkout";
@@ -105,32 +109,38 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
   }, [authCheckState]);
 
   return (
-    <Elements stripe={stripePromise}>
-      <ScrollToTop>
-        <Navbar />
-        <Container className="content my-4">
-          <Routes>
-            <Route path="/" element={<ProductList />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/product/:slug" element={<ProductDetails />} />
-            <Route path="/search/:query" element={<SearchResults />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/about" element={<About />} />
-            <Route
-              path="/checkout"
-              element={
-                <PrivateRoute>
-                  <Checkout />
-                </PrivateRoute>
-              }
-            />
-            <Route path="*" element={<Default />} />
-          </Routes>
-        </Container>
-        <Footer />
-      </ScrollToTop>
-    </Elements>
+    <ToastProvider position="top-right" maxToasts={5}>
+      <Elements stripe={stripePromise}>
+        <ScrollToTop>
+          <Navbar />
+          <Container className="content my-4">
+            <Routes>
+              <Route path="/" element={<ProductList />} />
+              <Route path="/products" element={<ProductList />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/product/:slug" element={<ProductDetails />} />
+              <Route path="/search/:query" element={<SearchResults />} />
+              <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/price-alerts" element={<PriceAlerts />} />
+              <Route path="/compare" element={<ProductComparison />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/about" element={<About />} />
+              <Route
+                path="/checkout"
+                element={
+                  <PrivateRoute>
+                    <Checkout />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="*" element={<Default />} />
+            </Routes>
+          </Container>
+          <Footer />
+        </ScrollToTop>
+      </Elements>
+    </ToastProvider>
   );
 };
 

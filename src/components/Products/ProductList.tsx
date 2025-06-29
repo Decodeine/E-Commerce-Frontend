@@ -3,7 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts, setFilters, setPagination } from "../../store/actions/storeActions";
 import ProductCard from "./ProductCard";
 import ProductFilters from "./ProductFilters";
+import CategoryNavigation from "./CategoryNavigation";
+import FeaturedProducts from "./FeaturedProducts";
 import FiltersDemo from "./FiltersDemo";
+import Button from "../UI/Button/Button";
+import Loading from "../UI/Loading/Loading";
 import "./css/ProductList.css";
 import type { AppDispatch } from "../../store/store";
 import type { FilterParams } from "../../services/productsApi";
@@ -31,6 +35,15 @@ const ProductList: React.FC = () => {
   const categories = useSelector((state: any) => state.store.categories);
   
   const [showFilters, setShowFilters] = useState(false);
+  const [showFeaturedProducts, setShowFeaturedProducts] = useState(true);
+
+  // Check if we should show featured products (on first load or when no filters)
+  const shouldShowFeatured = !filters?.category && 
+                             !filters?.search && 
+                             !filters?.brand && 
+                             !filters?.price_min && 
+                             !filters?.price_max &&
+                             pagination?.currentPage === 1;
 
   useEffect(() => {
     dispatch(fetchProducts(filters));
@@ -68,26 +81,28 @@ const ProductList: React.FC = () => {
 
     // Previous button
     pages.push(
-      <button
+      <Button
         key="prev"
-        className={`pagination-btn ${!pagination.hasPrevious ? 'disabled' : ''}`}
+        variant="outline"
+        size="sm"
         onClick={() => handlePageChange(pagination.currentPage - 1)}
         disabled={!pagination.hasPrevious}
       >
         ←
-      </button>
+      </Button>
     );
 
     // First page
     if (startPage > 1) {
       pages.push(
-        <button
+        <Button
           key={1}
-          className={`pagination-btn ${pagination.currentPage === 1 ? 'active' : ''}`}
+          variant={pagination.currentPage === 1 ? "primary" : "ghost"}
+          size="sm"
           onClick={() => handlePageChange(1)}
         >
           1
-        </button>
+        </Button>
       );
       if (startPage > 2) {
         pages.push(<span key="dots1" className="pagination-dots">...</span>);
@@ -97,13 +112,14 @@ const ProductList: React.FC = () => {
     // Middle pages
     for (let i = startPage; i <= endPage; i++) {
       pages.push(
-        <button
+        <Button
           key={i}
-          className={`pagination-btn ${pagination.currentPage === i ? 'active' : ''}`}
+          variant={pagination.currentPage === i ? "primary" : "ghost"}
+          size="sm"
           onClick={() => handlePageChange(i)}
         >
           {i}
-        </button>
+        </Button>
       );
     }
 
@@ -113,26 +129,28 @@ const ProductList: React.FC = () => {
         pages.push(<span key="dots2" className="pagination-dots">...</span>);
       }
       pages.push(
-        <button
+        <Button
           key={pagination.totalPages}
-          className={`pagination-btn ${pagination.currentPage === pagination.totalPages ? 'active' : ''}`}
+          variant={pagination.currentPage === pagination.totalPages ? "primary" : "ghost"}
+          size="sm"
           onClick={() => handlePageChange(pagination.totalPages)}
         >
           {pagination.totalPages}
-        </button>
+        </Button>
       );
     }
 
     // Next button
     pages.push(
-      <button
+      <Button
         key="next"
-        className={`pagination-btn ${!pagination.hasNext ? 'disabled' : ''}`}
+        variant="outline"
+        size="sm"
         onClick={() => handlePageChange(pagination.currentPage + 1)}
         disabled={!pagination.hasNext}
       >
         →
-      </button>
+      </Button>
     );
 
     return (
@@ -153,10 +171,11 @@ const ProductList: React.FC = () => {
         <div className="product-list-header">
           <h1 className="product-list-title">All Products</h1>
         </div>
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <span className="loading-text">Loading products...</span>
-        </div>
+        <Loading 
+          variant="spinner" 
+          size="lg" 
+          text="Loading products..." 
+        />
       </div>
     );
   }
@@ -177,17 +196,37 @@ const ProductList: React.FC = () => {
 
   return (
     <div className="product-list-container">
+      {/* Featured Products Section - Show only on main page */}
+      {shouldShowFeatured && showFeaturedProducts && (
+        <div className="featured-section">
+          <FeaturedProducts />
+          <div className="section-divider">
+            <h2>All Products</h2>
+            <Button 
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFeaturedProducts(false)}
+            >
+              Hide Featured
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="product-list-header">
         <div className="header-content">
-          <h1 className="product-list-title">All Products</h1>
+          <h1 className="product-list-title">
+            {filters?.category ? `${filters.category} Products` : 'All Products'}
+          </h1>
           <div className="header-actions">
-            <button 
-              className={`filter-toggle-btn ${showFilters ? 'active' : ''}`}
+            <Button 
+              variant={showFilters ? "primary" : "outline"}
+              size="sm"
               onClick={() => setShowFilters(!showFilters)}
             >
               <span>Filters</span>
               <span className="filter-icon">⚙</span>
-            </button>
+            </Button>
           </div>
         </div>
         <p className="product-list-count">
@@ -196,44 +235,51 @@ const ProductList: React.FC = () => {
       </div>
       
       <div className="product-list-content">
-        {/* Filters Demo - Shows active filters and stats */}
-        <FiltersDemo />
-        
-        {/* Filters Sidebar */}
-        <div className={`filters-sidebar ${showFilters ? 'show' : ''}`}>
-          <ProductFilters
-            onFiltersChange={handleFiltersChange}
-            isOpen={showFilters}
-            onToggle={() => setShowFilters(!showFilters)}
-          />
+        {/* Category Navigation Sidebar */}
+        <div className="category-sidebar">
+          <CategoryNavigation />
         </div>
 
-        {/* Products Content */}
-        <div className="products-content">
-          <div className="products-grid">
-            {products.map((item: ProductItem) => (
-              <ProductCard 
-                key={item.id}
-                product={{
-                  id: typeof item.id === 'string' ? parseInt(item.id) : item.id,
-                  name: item.name,
-                  slug: item.slug,
-                  price: item.price,
-                  sale_price: item.sale_price,
-                  image: item.picture,
-                  rating: item.rating,
-                  reviews_count: item.reviews_count,
-                  in_stock: item.quantity > 0
-                }}
-                onAddToCart={handleAddToCart}
-                onToggleWishlist={handleToggleWishlist}
-                isInWishlist={false} // TODO: Implement wishlist state
-              />
-            ))}
+        {/* Filters Demo - Shows active filters and stats */}
+        <div className="main-content">
+          <FiltersDemo />
+          
+          {/* Filters Sidebar */}
+          <div className={`filters-sidebar ${showFilters ? 'show' : ''}`}>
+            <ProductFilters
+              onFiltersChange={handleFiltersChange}
+              isOpen={showFilters}
+              onToggle={() => setShowFilters(!showFilters)}
+            />
           </div>
 
-          {/* Pagination */}
-          {renderPagination()}
+          {/* Products Content */}
+          <div className="products-content">
+            <div className="products-grid">
+              {products.map((item: ProductItem) => (
+                <ProductCard 
+                  key={item.id}
+                  product={{
+                    id: typeof item.id === 'string' ? parseInt(item.id) : item.id,
+                    name: item.name,
+                    slug: item.slug,
+                    price: item.price,
+                    sale_price: item.sale_price,
+                    image: item.picture,
+                    rating: item.rating,
+                    reviews_count: item.reviews_count,
+                    in_stock: item.quantity > 0
+                  }}
+                  onAddToCart={handleAddToCart}
+                  onToggleWishlist={handleToggleWishlist}
+                  isInWishlist={false} // TODO: Implement wishlist state
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {renderPagination()}
+          </div>
         </div>
       </div>
     </div>

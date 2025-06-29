@@ -16,7 +16,7 @@ import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
 import { 
   fetchFeaturedProducts,
-  fetchDeals,
+  fetchDealsProducts,
   fetchNewArrivals,
   fetchTopRated 
 } from '../../store/actions/storeActions';
@@ -51,7 +51,7 @@ const FeaturedProducts: React.FC = () => {
   useEffect(() => {
     // Fetch all featured product sections
     dispatch(fetchFeaturedProducts());
-    dispatch(fetchDeals());
+    dispatch(fetchDealsProducts());
     dispatch(fetchNewArrivals());
     dispatch(fetchTopRated());
   }, [dispatch]);
@@ -191,7 +191,22 @@ const FeaturedProducts: React.FC = () => {
         >
           {section.products.map((product) => (
             <div key={product.id} className="carousel-item">
-              <ProductCard product={product} />
+              <ProductCard 
+                product={{
+                  id: product.id,
+                  name: product.name,
+                  slug: product.slug,
+                  price: parseFloat(product.price),
+                  sale_price: product.original_price ? parseFloat(product.original_price) : undefined,
+                  image: product.picture,
+                  rating: parseFloat(product.rating),
+                  reviews_count: product.review_count,
+                  in_stock: product.in_stock
+                }}
+                onAddToCart={(id) => {/* TODO: implement */}}
+                onToggleWishlist={(id) => {/* TODO: implement */}}
+                isInWishlist={false}
+              />
             </div>
           ))}
         </div>
