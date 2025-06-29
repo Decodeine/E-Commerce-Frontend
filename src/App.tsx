@@ -29,6 +29,8 @@ import PrivateRoute from "./components/Utilities/PrivateRoute";
 
 import Login from "./components/Authentication/Login";
 import Register from "./components/Authentication/Register";
+import PasswordReset from "./components/Authentication/PasswordReset";
+import ChangePassword from "./components/Authentication/ChangePassword";
 
 import { Container } from "react-bootstrap";
 
@@ -119,6 +121,13 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
               <Route path="/products" element={<ProductList />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/password_reset" element={<PasswordReset />} />
+              <Route path="/password_reset/:uid/:token" element={<PasswordReset />} />
+              <Route path="/change_password" element={
+                <PrivateRoute>
+                  <ChangePassword />
+                </PrivateRoute>
+              } />
               <Route path="/product/:slug" element={<ProductDetails />} />
               <Route path="/search/:query" element={<SearchResults />} />
               <Route path="/wishlist" element={<Wishlist />} />

@@ -64,6 +64,32 @@ export const TOGGLE_CHECKOUT_COMPLETE = "TOGGLE_CHECKOUT_COMPLETE";
 export const TOGGLE_DIFFERENT_BILLING_ADDRESS = "TOGGLE_DIFFERENT_BILLING_ADDRESS";
 export const SET_PAYMENT = "SET_PAYMENT";
 
+// Toast action types
+export const SHOW_TOAST = "SHOW_TOAST";
+export const HIDE_TOAST = "HIDE_TOAST";
+export const CLEAR_ALL_TOASTS = "CLEAR_ALL_TOASTS";
+
+// Action interfaces
+interface ShowToastAction {
+  type: typeof SHOW_TOAST;
+  payload: {
+    id: string;
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    duration?: number;
+    persistent?: boolean;
+  };
+}
+
+interface HideToastAction {
+  type: typeof HIDE_TOAST;
+  payload: string; // toast id
+}
+
+interface ClearAllToastsAction {
+  type: typeof CLEAR_ALL_TOASTS;
+}
+
 // Enhanced thunk action for fetching products with filters
 export const fetchProducts = (
   filters: FilterParams = {}
@@ -415,6 +441,29 @@ export const setPayment = (value: string) => {
     value
   };
 };
+
+// Toast action creators
+export const showToast = (toast: {
+  message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  duration?: number;
+  persistent?: boolean;
+}) => ({
+  type: SHOW_TOAST,
+  payload: {
+    ...toast,
+    id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+  }
+});
+
+export const hideToast = (id: string) => ({
+  type: HIDE_TOAST,
+  payload: id
+});
+
+export const clearAllToasts = () => ({
+  type: CLEAR_ALL_TOASTS
+});
 
 // Wishlist thunk actions
 export const fetchWishlist = (): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {

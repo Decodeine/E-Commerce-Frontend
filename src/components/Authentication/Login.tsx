@@ -1,27 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEyeSlash, faEnvelope, faLock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { 
+  faEnvelope, 
+  faLock, 
+  faEye, 
+  faEyeSlash,
+  faSignInAlt,
+  faExclamationCircle,
+  faCheckCircle
+} from "@fortawesome/free-solid-svg-icons";
 import { authClearErrors, authLogin } from "../../store/actions/authActions";
+import { useToast } from "../UI/Toast/ToastProvider";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
-import { useToast } from "../UI/Toast/ToastProvider";
+import { validateEmail } from "../../services/accountsApi";
 import type { AppDispatch } from "../../store/store";
-import "./css/Login.css"; 
+import "./css/Login.css";
 
 const Login: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>(); 
+  const dispatch = useDispatch<AppDispatch>();
   const { token, error, loading } = useSelector((state: any) => state.auth);
-  const { showToast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    password: ""
+  });
+
+  const [validation, setValidation] = useState({
+    email: { valid: true, message: "" },
+    password: { valid: true, message: "" }
+  });
+
   const [showPassword, setShowPassword] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     dispatch(authClearErrors());
@@ -29,15 +47,14 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (token && !error) {
-      const from =
-        (location.state && (location.state as any).from?.pathname) ||
-        "/";
-      navigate(from, { replace: true });
       showToast({
         type: 'success',
-        title: 'Welcome back!',
-        message: 'You have been successfully logged in.'
+        title: 'Welcome Back!',
+        message: 'You have successfully logged in.'
       });
+      
+      const from = (location.state && (location.state as any).from?.pathname) || "/";
+      navigate(from, { replace: true });
     }
   }, [token, error, location.state, navigate, showToast]);
 
@@ -46,62 +63,98 @@ const Login: React.FC = () => {
       showToast({
         type: 'error',
         title: 'Login Failed',
-        message: 'Invalid email or password. Please try again.'
+        message: error.response?.data?.detail || 'Invalid credentials. Please check your email and password.'
       });
     }
   }, [error, showToast]);
 
-  const validateForm = () => {
-    const errors: {[key: string]: string} = {};
-    
-    if (!email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Please enter a valid email address';
+  const validateField = (name: string, value: string) => {
+    const newValidation = { ...validation };
+
+    switch (name) {
+      case 'email':
+        if (!value.trim()) {
+          newValidation.email = { valid: false, message: 'Email is required' };
+        } else if (!validateEmail(value)) {
+          newValidation.email = { valid: false, message: 'Please enter a valid email address' };
+        } else {
+          newValidation.email = { valid: true, message: '' };
+        }
+        break;
+
+      case 'password':
+        if (!value) {
+          newValidation.password = { valid: false, message: 'Password is required' };
+        } else if (value.length < 6) {
+          newValidation.password = { valid: false, message: 'Password must be at least 6 characters' };
+        } else {
+          newValidation.password = { valid: true, message: '' };
+        }
+        break;
     }
-    
-    if (!password.trim()) {
-      errors.password = 'Password is required';
-    } else if (password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+
+    setValidation(newValidation);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    validateField(name, value);
+  };
+
+  const isFormValid = () => {
+    return Object.values(validation).every(field => field.valid) &&
+           Object.values(form).every(value => value.trim() !== '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
-      await dispatch(authLogin(email, password));
+    if (!isFormValid()) {
+      showToast({
+        type: 'error',
+        title: 'Validation Error',
+        message: 'Please fix all errors before submitting.'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      await dispatch(authLogin(form.email, form.password));
+    } catch (error) {
+      // Error handling is done in useEffect
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    if (validationErrors.email) {
-      setValidationErrors(prev => ({ ...prev, email: '' }));
+  const renderFieldError = (fieldName: keyof typeof validation) => {
+    const field = validation[fieldName];
+    if (!field.valid && field.message) {
+      return (
+        <div className="field-error">
+          <FontAwesomeIcon icon={faExclamationCircle} />
+          <span>{field.message}</span>
+        </div>
+      );
     }
+    if (field.valid && field.message) {
+      return (
+        <div className="field-success">
+          <FontAwesomeIcon icon={faCheckCircle} />
+          <span>{field.message}</span>
+        </div>
+      );
+    }
+    return null;
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    if (validationErrors.password) {
-      setValidationErrors(prev => ({ ...prev, password: '' }));
-    }
-  };
-
-  if (loading) {
+  if (loading && !isSubmitting) {
     return (
       <div className="login-container">
-        <div className="login-loading">
-          <Loading 
-            variant="spinner" 
-            size="lg" 
-            text="Signing you in..." 
-          />
-        </div>
+        <Loading variant="spinner" size="lg" text="Signing you in..." />
       </div>
     );
   }
@@ -109,94 +162,102 @@ const Login: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-content">
-        <Card variant="elevated" padding="xl" className="login-card">
+        <Card className="login-card" padding="xl">
           <div className="login-header">
-            <h1 className="login-title">Welcome Back</h1>
-            <p className="login-subtitle">Sign in to your account to continue shopping</p>
+            <div className="login-icon">
+              <FontAwesomeIcon icon={faSignInAlt} />
+            </div>
+            <h1>Welcome Back</h1>
+            <p>Sign in to your account to continue</p>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
+            {/* Email Field */}
             <div className="form-group">
-              <label htmlFor="email" className="form-label">
-                <FontAwesomeIcon icon={faEnvelope} className="label-icon" />
+              <label htmlFor="email">
+                <FontAwesomeIcon icon={faEnvelope} />
                 Email Address
               </label>
-              <div className="input-wrapper">
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={handleEmailChange}
-                  placeholder="Enter your email address"
-                  className={`form-input ${validationErrors.email ? 'error' : ''}`}
-                  required
-                />
-                <FontAwesomeIcon icon={faEnvelope} className="input-icon" />
-              </div>
-              {validationErrors.email && (
-                <span className="error-message">{validationErrors.email}</span>
-              )}
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                className={`form-input ${!validation.email.valid ? 'error' : validation.email.valid && form.email ? 'success' : ''}`}
+                placeholder="Enter your email address"
+                required
+              />
+              {renderFieldError('email')}
             </div>
 
+            {/* Password Field */}
             <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                <FontAwesomeIcon icon={faLock} className="label-icon" />
+              <label htmlFor="password">
+                <FontAwesomeIcon icon={faLock} />
                 Password
               </label>
-              <div className="input-wrapper">
+              <div className="password-input-wrapper">
                 <input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={handlePasswordChange}
+                  value={form.password}
+                  onChange={handleChange}
+                  className={`form-input ${!validation.password.valid ? 'error' : validation.password.valid && form.password ? 'success' : ''}`}
                   placeholder="Enter your password"
-                  className={`form-input ${validationErrors.password ? 'error' : ''}`}
                   required
                 />
-                <FontAwesomeIcon icon={faLock} className="input-icon" />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
                   className="password-toggle"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword(!showPassword)}
                 >
                   <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                 </button>
               </div>
-              {validationErrors.password && (
-                <span className="error-message">{validationErrors.password}</span>
-              )}
+              {renderFieldError('password')}
             </div>
 
-            <div className="form-actions">
-              <Button 
-                type="submit" 
-                variant="primary" 
-                size="lg"
-                fullWidth
-                disabled={loading}
-                icon={faArrowRight}
-                className="login-button"
-              >
-                {loading ? 'Signing In...' : 'Sign In'}
-              </Button>
+            {/* Remember Me & Forgot Password */}
+            <div className="form-options">
+              <label className="remember-me">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span className="checkmark"></span>
+                Remember me
+              </label>
+              <Link to="/password_reset" className="forgot-password">
+                Forgot password?
+              </Link>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              disabled={!isFormValid() || isSubmitting}
+              icon={faSignInAlt}
+              className="login-submit"
+            >
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
+            </Button>
+
+            {/* Register Link */}
+            <div className="login-footer">
+              <p>
+                Don't have an account?{' '}
+                <Link to="/register" className="register-link">
+                  Create one here
+                </Link>
+              </p>
             </div>
           </form>
-
-          <div className="login-footer">
-            <div className="login-links">
-              <Link to="/password-reset" className="forgot-password-link">
-                Forgot your password?
-              </Link>
-            </div>
-            
-            <div className="signup-prompt">
-              <span>Don't have an account? </span>
-              <Link to="/register" className="signup-link">
-                Create Account
-              </Link>
-            </div>
-          </div>
         </Card>
       </div>
     </div>

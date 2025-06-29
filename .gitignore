@@ -23,6 +23,7 @@
 
 # roadmap and planning files
 FRONTEND_ROADMAP.md
+/documentation
 
 npm-debug.log*
 yarn-debug.log*
