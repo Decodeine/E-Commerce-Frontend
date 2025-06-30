@@ -256,7 +256,7 @@ const ProductList: React.FC = () => {
           {/* Products Content */}
           <div className="products-content">
             <div className="products-grid">
-              {products.map((item: ProductItem) => (
+              {(Array.isArray(products) ? products : []).map((item: ProductItem) => (
                 <ProductCard 
                   key={item.id}
                   product={{

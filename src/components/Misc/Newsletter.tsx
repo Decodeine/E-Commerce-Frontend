@@ -1,43 +1,95 @@
 import React, { useState } from "react";
-import { InputGroup, Button, Form, FormControl } from "react-bootstrap";
 import axios from "axios";
 import { API_PATH } from "../../backend_url";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPaperPlane, faEnvelope } from "@fortawesome/free-solid-svg-icons";
+import Card from "../UI/Card/Card";
+import Button from "../UI/Button/Button";
+import "./css/Newsletter.css";
 
 const Newsletter: React.FC = () => {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim()) return;
+
+    setIsSubmitting(true);
+    setMessage("");
+
     try {
       await axios.post(`${API_PATH}subscribers/`, { email });
-      alert("Successfully subscribed!");
+      setMessage("🎉 Successfully subscribed! Welcome to our community!");
+      setEmail("");
     } catch (err) {
-      alert(`The email ${email} is already a subscriber!`);
+      setMessage(`📧 The email ${email} is already subscribed!`);
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setMessage(""), 5000);
     }
-    setEmail("");
   };
 
   return (
-    <div>
-      <h5 className="font-weight-bold mb-3">Newsletter</h5>
-      <p className="text-muted mb-3">Get updates on new products and exclusive offers!</p>
-      <Form onSubmit={handleSubmit}>
-        <InputGroup className="mb-2">
-          <FormControl
-            type="email"
-            placeholder="Your email address"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-            className="rounded-left"
-          />
-          <Button variant="primary" type="submit" className="rounded-right">
-            <FontAwesomeIcon icon="paper-plane" />
-          </Button>
-        </InputGroup>
-      </Form>
-    </div>
+    <Card variant="glass" className="newsletter-card" padding="xl">
+      <div className="newsletter-content">
+        <div className="newsletter-header">
+          <div className="newsletter-icon">
+            <FontAwesomeIcon icon={faEnvelope} />
+          </div>
+          <h3 className="newsletter-title">Stay Updated</h3>
+          <p className="newsletter-description">
+            Get the latest tech news, exclusive deals, and early access to new products 
+            delivered straight to your inbox.
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="newsletter-form">
+          <div className="input-group">
+            <input
+              type="email"
+              placeholder="Enter your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="newsletter-input"
+              disabled={isSubmitting}
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting || !email.trim()}
+              className="newsletter-button"
+              icon={<FontAwesomeIcon icon={faPaperPlane} />}
+            >
+              {isSubmitting ? "Subscribing..." : "Subscribe"}
+            </Button>
+          </div>
+        </form>
+
+        {message && (
+          <div className={`newsletter-message ${message.includes("🎉") ? "success" : "info"}`}>
+            {message}
+          </div>
+        )}
+
+        <div className="newsletter-benefits">
+          <div className="benefit-item">
+            <span className="benefit-icon">🚀</span>
+            <span>Early access to sales</span>
+          </div>
+          <div className="benefit-item">
+            <span className="benefit-icon">📱</span>
+            <span>Latest tech updates</span>
+          </div>
+          <div className="benefit-item">
+            <span className="benefit-icon">🎁</span>
+            <span>Exclusive member deals</span>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 };
 

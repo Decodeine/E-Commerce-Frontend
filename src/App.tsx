@@ -17,6 +17,7 @@ import Default from "./components/Misc/Default";
 import ProductList from "./components/Products/ProductList";
 import ProductDetails from "./components/Products/ProductDetails";
 import SearchResults from "./components/Products/SearchResults";
+import HomePage from "./components/Home/HomePage";
 import Wishlist from "./components/Wishlist/Wishlist";
 import PriceAlerts from "./components/PriceAlerts/PriceAlerts";
 import ProductComparison from "./components/Products/ProductComparison";
@@ -117,7 +118,7 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
           <Navbar />
           <Container className="content my-4">
             <Routes>
-              <Route path="/" element={<ProductList />} />
+              <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductList />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

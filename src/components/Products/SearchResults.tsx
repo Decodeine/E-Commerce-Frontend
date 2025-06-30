@@ -63,7 +63,7 @@ const SearchResults: React.FC = () => {
     
     return (
       <div className="search-results-grid">
-        {products.map((item: ProductItem) => (
+        {(Array.isArray(products) ? products : []).map((item: ProductItem) => (
           <ProductCard 
             key={item.id}
             product={{

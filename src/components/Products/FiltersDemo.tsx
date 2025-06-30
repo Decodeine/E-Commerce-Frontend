@@ -10,13 +10,13 @@ const FiltersDemo: React.FC = () => {
   const pagination = useSelector((state: any) => state.store.pagination);
   const products = useSelector((state: any) => state.store.products);
 
-  const activeFiltersCount = Object.keys(filters).filter(key => {
+  const activeFiltersCount = filters && typeof filters === 'object' ? Object.keys(filters).filter(key => {
     const value = filters[key];
     return value && value !== '' && value !== false;
-  }).length;
+  }).length : 0;
 
   const renderActiveFilters = () => {
-    if (activeFiltersCount === 0) return null;
+    if (!filters || activeFiltersCount === 0) return null;
 
     return (
       <Card className="active-filters-card" padding="md">
@@ -106,7 +106,7 @@ const FiltersDemo: React.FC = () => {
           <div className="stat-item">
             <FontAwesomeIcon icon={faSearch} className="stat-icon" />
             <div className="stat-content">
-              <h3>{pagination.totalItems || 0}</h3>
+              <h3>{pagination?.totalItems || 0}</h3>
               <p>Total Results</p>
             </div>
           </div>
@@ -115,11 +115,11 @@ const FiltersDemo: React.FC = () => {
 
       {renderActiveFilters()}
 
-      {pagination.totalPages > 1 && (
+      {(pagination?.totalPages || 0) > 1 && (
         <Card className="pagination-info" padding="md">
           <p>
-            Page {pagination.currentPage} of {pagination.totalPages}
-            {pagination.hasNext && ' • More results available'}
+            Page {pagination?.currentPage || 1} of {pagination?.totalPages || 1}
+            {pagination?.hasNext && ' • More results available'}
           </p>
         </Card>
       )}

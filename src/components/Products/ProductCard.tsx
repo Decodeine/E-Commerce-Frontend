@@ -101,21 +101,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="product-card__price">
           {product.sale_price ? (
             <>
-              <span className="current-price">${product.sale_price.toFixed(2)}</span>
-              <span className="original-price">${product.price.toFixed(2)}</span>
+              <span className="current-price">${parseFloat(String(product.sale_price)).toFixed(2)}</span>
+              <span className="original-price">${parseFloat(String(product.price)).toFixed(2)}</span>
             </>
           ) : (
-            <span className="current-price">${product.price.toFixed(2)}</span>
+            <span className="current-price">${parseFloat(String(product.price)).toFixed(2)}</span>
           )}
         </div>
         
         {product.rating && (
           <div className="product-card__rating">
             <span className="rating-stars">
-              {'★'.repeat(Math.floor(product.rating))}
-              {'☆'.repeat(5 - Math.floor(product.rating))}
+              {'★'.repeat(Math.floor(Number(product.rating)))}
+              {'☆'.repeat(5 - Math.floor(Number(product.rating)))}
             </span>
-            <span className="rating-value">({product.rating})</span>
+            <span className="rating-value">({Number(product.rating).toFixed(1)})</span>
             {product.reviews_count && (
               <span className="reviews-count"> • {product.reviews_count} reviews</span>
             )}

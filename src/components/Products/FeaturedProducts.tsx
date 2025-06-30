@@ -189,7 +189,7 @@ const FeaturedProducts: React.FC = () => {
             }));
           }}
         >
-          {section.products.map((product) => (
+          {(Array.isArray(section.products) ? section.products : []).map((product) => (
             <div key={product.id} className="carousel-item">
               <ProductCard 
                 product={{
@@ -216,7 +216,7 @@ const FeaturedProducts: React.FC = () => {
 
   const SectionTabs = () => (
     <div className="section-tabs">
-      {featuredSections.map((section) => (
+      {(Array.isArray(featuredSections) ? featuredSections : []).map((section) => (
         <button
           key={section.id}
           className={`section-tab ${activeSection === section.id ? 'active' : ''}`}

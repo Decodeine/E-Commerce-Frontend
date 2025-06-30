@@ -53,17 +53,18 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
   }, [dispatch]);
 
   useEffect(() => {
-    setLocalFilters(filters);
+    setLocalFilters(filters || {});
   }, [filters]);
 
   const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...localFilters, [key]: value };
+    const newFilters = { ...(localFilters || {}), [key]: value };
     setLocalFilters(newFilters);
   };
 
   const applyFilters = () => {
-    dispatch(setFilters(localFilters));
-    onFiltersChange(localFilters);
+    const filtersToApply = localFilters || {};
+    dispatch(setFilters(filtersToApply));
+    onFiltersChange(filtersToApply);
   };
 
   const clearFilters = () => {
@@ -149,11 +150,11 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
               <input
                 type="text"
                 placeholder="Search products..."
-                value={localFilters.search || ''}
+                value={(localFilters || {}).search || ''}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 className="search-input"
               />
-              {localFilters.search && (
+              {(localFilters || {}).search && (
                 <button
                   onClick={() => handleFilterChange('search', '')}
                   className="clear-search-btn"
@@ -168,7 +169,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           <div className="filter-section">
             <label className="filter-label">Sort by</label>
             <select
-              value={localFilters.ordering || ''}
+              value={(localFilters || {}).ordering || ''}
               onChange={(e) => handleFilterChange('ordering', e.target.value)}
               className="filter-select"
             >
@@ -198,7 +199,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                   <input
                     type="number"
                     placeholder="Min"
-                    value={localFilters.price__gte || ''}
+                    value={(localFilters || {}).price__gte || ''}
                     onChange={(e) => handleFilterChange('price__gte', e.target.value)}
                     className="price-input"
                   />
@@ -206,7 +207,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                   <input
                     type="number"
                     placeholder="Max"
-                    value={localFilters.price__lte || ''}
+                    value={(localFilters || {}).price__lte || ''}
                     onChange={(e) => handleFilterChange('price__lte', e.target.value)}
                     className="price-input"
                   />
@@ -234,7 +235,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                       type="radio"
                       name="rating"
                       value={rating}
-                      checked={localFilters.rating__gte === rating}
+                      checked={(localFilters || {}).rating__gte === rating}
                       onChange={(e) => handleFilterChange('rating__gte', Number(e.target.value))}
                     />
                     <span className="rating-display">
@@ -259,13 +260,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             </button>
             {expandedSections.brands && (
               <div className="filter-content">
-                {brands.slice(0, 10).map((brand: any) => (
+                {(Array.isArray(brands) ? brands : []).slice(0, 10).map((brand: any) => (
                   <label key={brand.slug} className="checkbox-option">
                     <input
                       type="checkbox"
-                      checked={localFilters.brand__slug?.split(',').includes(brand.slug) || false}
+                      checked={(localFilters || {}).brand__slug?.split(',').includes(brand.slug) || false}
                       onChange={(e) => {
-                        const currentBrands = localFilters.brand__slug ? localFilters.brand__slug.split(',') : [];
+                        const filters = localFilters || {};
+                        const currentBrands = filters.brand__slug ? filters.brand__slug.split(',') : [];
                         const newBrands = e.target.checked
                           ? [...currentBrands, brand.slug]
                           : currentBrands.filter(b => b !== brand.slug);
@@ -294,13 +296,14 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             </button>
             {expandedSections.categories && (
               <div className="filter-content">
-                {categories.slice(0, 10).map((category: any) => (
+                {(Array.isArray(categories) ? categories : []).slice(0, 10).map((category: any) => (
                   <label key={category.id} className="checkbox-option">
                     <input
                       type="checkbox"
-                      checked={localFilters.category__name?.split(',').includes(category.name) || false}
+                      checked={(localFilters || {}).category__name?.split(',').includes(category.name) || false}
                       onChange={(e) => {
-                        const currentCategories = localFilters.category__name ? localFilters.category__name.split(',') : [];
+                        const filters = localFilters || {};
+                        const currentCategories = filters.category__name ? filters.category__name.split(',') : [];
                         const newCategories = e.target.checked
                           ? [...currentCategories, category.name]
                           : currentCategories.filter(c => c !== category.name);
@@ -334,10 +337,11 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                     <button
                       key={tag}
                       className={`tag-button ${
-                        localFilters.tags?.split(',').includes(tag) ? 'tag-button--active' : ''
+                        (localFilters || {}).tags?.split(',').includes(tag) ? 'tag-button--active' : ''
                       }`}
                       onClick={() => {
-                        const currentTags = localFilters.tags ? localFilters.tags.split(',').filter(t => t) : [];
+                        const filters = localFilters || {};
+                        const currentTags = filters.tags ? filters.tags.split(',').filter(t => t) : [];
                         const newTags = currentTags.includes(tag)
                           ? currentTags.filter(t => t !== tag)
                           : [...currentTags, tag];
@@ -356,7 +360,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           <div className="filter-section">
             <label className="filter-label">Condition</label>
             <select
-              value={localFilters.condition || ''}
+              value={(localFilters || {}).condition || ''}
               onChange={(e) => handleFilterChange('condition', e.target.value)}
               className="filter-select"
             >
@@ -374,7 +378,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             <label className="checkbox-option">
               <input
                 type="checkbox"
-                checked={localFilters.in_stock || false}
+                checked={(localFilters || {}).in_stock || false}
                 onChange={(e) => handleFilterChange('in_stock', e.target.checked)}
               />
               <span className="checkbox-label">In Stock Only</span>
@@ -386,7 +390,7 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             <label className="checkbox-option">
               <input
                 type="checkbox"
-                checked={localFilters.featured || false}
+                checked={(localFilters || {}).featured || false}
                 onChange={(e) => handleFilterChange('featured', e.target.checked)}
               />
               <span className="checkbox-label">Featured Products Only</span>

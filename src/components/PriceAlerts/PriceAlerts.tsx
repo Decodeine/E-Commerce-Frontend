@@ -13,6 +13,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
+import { useToast } from '../UI/Toast/ToastProvider';
 import { fetchPriceAlerts, createPriceAlert, deletePriceAlert } from '../../store/actions/storeActions';
 import type { AppDispatch } from '../../store/store';
 import './css/PriceAlerts.css';
@@ -47,6 +48,7 @@ const PriceAlerts: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { priceAlerts, loading } = useSelector((state: any) => state.store);
   const { isAuthenticated } = useSelector((state: any) => state.auth);
+  const { showToast } = useToast();
   
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createForm, setCreateForm] = useState<CreateAlertForm>({
@@ -82,20 +84,37 @@ const PriceAlerts: React.FC = () => {
         currentPrice: 0
       });
       
-      // Show success toast
+      showToast({
+        type: 'success',
+        title: 'Price Alert Created',
+        message: `You'll be notified when ${createForm.productName} drops to $${createForm.targetPrice}`
+      });
+      
     } catch (error) {
       console.error('Error creating price alert:', error);
-      // Show error toast
+      showToast({
+        type: 'error',
+        title: 'Failed to Create Alert',
+        message: 'Unable to create price alert. Please try again.'
+      });
     }
   };
 
   const handleDeleteAlert = async (alertId: number) => {
     try {
       await dispatch(deletePriceAlert(alertId));
-      // Show success toast
+      showToast({
+        type: 'success',
+        title: 'Alert Deleted',
+        message: 'Price alert has been removed successfully.'
+      });
     } catch (error) {
       console.error('Error deleting price alert:', error);
-      // Show error toast
+      showToast({
+        type: 'error',
+        title: 'Failed to Delete Alert',
+        message: 'Unable to delete price alert. Please try again.'
+      });
     }
   };
 

@@ -4,11 +4,12 @@ import './Card.css';
 export interface CardProps {
   children: React.ReactNode;
   className?: string;
-  variant?: 'default' | 'elevated' | 'outlined';
+  variant?: 'default' | 'elevated' | 'outlined' | 'glass';
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   hover?: boolean;
   clickable?: boolean;
   onClick?: () => void;
+  style?: React.CSSProperties;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -19,6 +20,7 @@ const Card: React.FC<CardProps> = ({
   hover = false,
   clickable = false,
   onClick,
+  style,
   ...props
 }) => {
   const baseClasses = 'card';
@@ -42,6 +44,7 @@ const Card: React.FC<CardProps> = ({
     <Component
       className={classes}
       onClick={onClick}
+      style={style}
       {...props}
     >
       {children}

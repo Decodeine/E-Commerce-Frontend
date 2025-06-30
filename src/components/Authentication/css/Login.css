@@ -1,4 +1,4 @@
-/* Login Component Styles */
+/* Login Component with eCommerce Conversion Colors */
 
 .login-container {
   display: flex;
@@ -6,7 +6,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: 2rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-hero);
   position: relative;
 }
 
@@ -29,23 +29,17 @@
 }
 
 .login-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    0 10px 20px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  background: var(--glass-primary);
+  backdrop-filter: var(--glass-primary-blur);
+  border: 1px solid var(--glass-primary-border);
+  box-shadow: var(--shadow-glass);
+  border-radius: var(--border-radius-xl);
+  transition: all var(--transition-normal);
 }
 
 .login-card:hover {
   transform: translateY(-5px);
-  box-shadow: 
-    0 30px 60px rgba(0, 0, 0, 0.15),
-    0 15px 30px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow-glass-hover);
 }
 
 /* Header Styles */
@@ -60,36 +54,36 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: var(--gradient-trust);
   border-radius: 50%;
   margin-bottom: 1.5rem;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-normal);
 }
 
 .login-icon:hover {
   transform: scale(1.1);
-  box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .login-icon svg {
   font-size: 2rem;
-  color: white;
+  color: var(--color-white);
 }
 
 .login-header h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #2d3748, #4a5568);
+  background: var(--gradient-trust);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .login-header p {
-  color: #718096;
+  color: var(--text-secondary);
   font-size: 1rem;
   margin: 0;
 }
@@ -111,51 +105,52 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: #4a5568;
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
 }
 
 .form-group label svg {
-  color: #667eea;
+  color: var(--color-trust);
   font-size: 1rem;
 }
 
 .form-input {
   padding: 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
+  border: 2px solid var(--color-gray-300);
+  border-radius: var(--border-radius);
   font-size: 1rem;
-  background: rgba(255, 255, 255, 0.8);
-  transition: all 0.3s ease;
+  background: var(--glass-background);
+  backdrop-filter: var(--glass-background-blur);
+  transition: all var(--transition-normal);
   outline: none;
 }
 
 .form-input:focus {
-  border-color: #667eea;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-trust);
+  background: var(--glass-secondary);
+  box-shadow: 0 0 0 3px var(--color-trust-bg);
   transform: translateY(-1px);
 }
 
 .form-input.error {
-  border-color: #e53e3e;
-  background: rgba(254, 242, 242, 0.8);
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
 }
 
 .form-input.error:focus {
-  border-color: #e53e3e;
-  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-bg);
 }
 
 .form-input.success {
-  border-color: #38a169;
-  background: rgba(240, 253, 244, 0.8);
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
 }
 
 .form-input.success:focus {
-  border-color: #38a169;
-  box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.1);
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 3px var(--color-success-bg);
 }
 
 /* Password Input Wrapper */
@@ -170,16 +165,16 @@
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: #718096;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .password-toggle:hover {
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  color: var(--color-trust);
+  background: var(--color-trust-bg);
 }
 
 /* Form Options */
