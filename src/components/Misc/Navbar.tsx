@@ -51,10 +51,10 @@ const Navbar: React.FC = () => {
 
   const shopLinks = [
     { label: "All Products", href: "/products" },
-    { label: "Smartphones", href: "/products?category=smartphones" },
-    { label: "Laptops", href: "/products?category=laptops" },
-    { label: "Audio", href: "/products?category=audio" },
-    { label: "Gaming", href: "/products?category=gaming" }
+    { label: "Smartphones", href: "/category/smartphones/brands" },
+    { label: "Laptops", href: "/category/laptops/brands" },
+    { label: "Audio", href: "/category/audio/brands" },
+    { label: "Gaming", href: "/category/gaming/brands" }
   ];
 
   const quickLinks = [

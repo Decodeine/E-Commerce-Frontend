@@ -2,6 +2,9 @@ import {
   FETCH_PRODUCTS_START,
   FETCH_PRODUCTS_SUCCESS,
   FETCH_PRODUCTS_FAIL,
+  SET_LOADING,
+  SET_ERROR,
+  CLEAR_ERROR,
   FETCH_FEATURED_PRODUCTS_SUCCESS,
   FETCH_DEALS_SUCCESS,
   FETCH_NEW_ARRIVALS_SUCCESS,
@@ -52,6 +55,7 @@ import {
 
 import { updateObject } from "../utility";
 import { Product, Brand, Category, FilterParams } from "../../services/productsApi";
+import { SerializedError } from "../utils/errorSerializer";
 
 interface CartItem {
   id: string;
@@ -69,7 +73,7 @@ interface StoreState {
   brands: Brand[];
   categories: Category[];
   loading: boolean;
-  error: any;
+  error: SerializedError | null;
   cart: CartItem[];
   subtotal: number;
   tax: number;
@@ -89,14 +93,14 @@ interface StoreState {
   // New Option B features
   wishlist: any[];
   wishlistLoading: boolean;
-  wishlistError: any;
+  wishlistError: SerializedError | null;
   priceAlerts: any[];
   priceAlertsLoading: boolean;
-  priceAlertsError: any;
+  priceAlertsError: SerializedError | null;
   comparison: Product[];
   productReviews: any[];
   reviewsLoading: boolean;
-  reviewsError: any;
+  reviewsError: SerializedError | null;
 }
 
 interface Action {
@@ -243,6 +247,15 @@ export default function storeReducer(
   switch (action.type) {
     case FETCH_PRODUCTS_START:
       return updateObject(state, { loading: true });
+
+    case SET_LOADING:
+      return updateObject(state, { loading: action.payload });
+
+    case SET_ERROR:
+      return updateObject(state, { error: action.payload });
+    
+    case CLEAR_ERROR:
+      return updateObject(state, { error: null });
 
     case FETCH_PRODUCTS_SUCCESS:
       return updateObject(state, { 

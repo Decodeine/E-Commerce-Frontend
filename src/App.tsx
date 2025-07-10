@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { connect, ConnectedProps } from "react-redux";
 import { authCheckState } from "./store/actions/authActions";
+import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./css/App.css";
@@ -16,6 +17,9 @@ import Default from "./components/Misc/Default";
 
 import ProductList from "./components/Products/ProductList";
 import ProductDetails from "./components/Products/ProductDetails";
+import CategoryProducts from "./components/Products/CategoryProducts";
+import BrandProducts from "./components/Products/BrandProducts";
+import CategoryBrands from "./components/Products/CategoryBrands";
 import SearchResults from "./components/Products/SearchResults";
 import HomePage from "./components/Home/HomePage";
 import Wishlist from "./components/Wishlist/Wishlist";
@@ -108,6 +112,10 @@ type PropsFromRedux = ConnectedProps<typeof connector>;
 
 const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
   useEffect(() => {
+    // Setup axios interceptors for JWT token handling
+    setupAxiosInterceptors();
+    
+    // Check authentication state on app load
     authCheckState();
   }, [authCheckState]);
 
@@ -120,6 +128,10 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductList />} />
+              <Route path="/category/:categorySlug" element={<CategoryProducts />} />
+              <Route path="/category/:categorySlug/brands" element={<CategoryBrands />} />
+              <Route path="/brand/:brandSlug" element={<BrandProducts />} />
+              <Route path="/brand/:brandSlug/category/:categorySlug" element={<BrandProducts />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/password_reset" element={<PasswordReset />} />

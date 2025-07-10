@@ -19,6 +19,7 @@ interface Product {
   reviews_count?: number;
   in_stock?: boolean;
   slug: string;
+  brand?: any;
 }
 
 interface ProductCardProps {
@@ -26,13 +27,15 @@ interface ProductCardProps {
   onAddToCart?: (productId: number) => void;
   onToggleWishlist?: (productId: number) => void;
   isInWishlist?: boolean;
+  viewMode?: 'grid' | 'list';
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
   onToggleWishlist,
-  isInWishlist = false
+  isInWishlist = false,
+  viewMode = 'grid'
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -73,7 +76,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <Card variant="elevated" className="product-card">
+    <Card 
+      variant="glass" 
+      className={`product-card ${viewMode === 'list' ? 'product-card--list' : 'product-card--grid'} ${!product.in_stock ? 'out-of-stock' : ''}`}
+    >
       <div className="product-card__image">
         <img 
           src={product.image || '/images/placeholder-product.jpg'} 
@@ -91,9 +97,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <FontAwesomeIcon icon={faEye} />
           </Button>
         </div>
+        {product.sale_price && (
+          <div className="product-card__badge">
+            {Math.round(((product.price - product.sale_price) / product.price) * 100)}% OFF
+          </div>
+        )}
+        {!product.in_stock && (
+          <div className="product-card__out-of-stock">Out of Stock</div>
+        )}
       </div>
       
       <div className="product-card__content">
+        {product.brand && (
+          <div className="product-card__brand">{product.brand.name || product.brand}</div>
+        )}
+        
         <h3 className="product-card__title" onClick={handleViewProduct}>
           {product.name}
         </h3>
@@ -119,6 +137,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {product.reviews_count && (
               <span className="reviews-count"> • {product.reviews_count} reviews</span>
             )}
+          </div>
+        )}
+        
+        {viewMode === 'list' && (
+          <div className="product-card__description">
+            High-quality product with excellent features and reliable performance.
           </div>
         )}
       </div>

@@ -48,6 +48,27 @@
   margin-bottom: var(--spacing-xs);
 }
 
+.brands-button {
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-md);
+  margin-top: var(--spacing-xs);
+  background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+  color: var(--text-light);
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0.9;
+}
+
+.brands-button:hover {
+  opacity: 1;
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
 .category-button {
   width: 100%;
   display: flex;

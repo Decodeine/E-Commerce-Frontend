@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faArrowRight, 
@@ -18,6 +19,8 @@ import ProductCard from '../Products/ProductCard';
 import CategoryNavigation from '../Products/CategoryNavigation';
 import FeaturedProducts from '../Products/FeaturedProducts';
 import Newsletter from '../Misc/Newsletter';
+import { fetchCategories } from '../../store/actions/storeActions';
+import { AppDispatch } from '../../store/store';
 import './css/HomePage.css';
 
 interface Product {
@@ -34,8 +37,14 @@ interface Product {
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const [heroProducts, setHeroProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load categories into Redux store
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   // Mock featured hero products - replace with real API call
   useEffect(() => {
@@ -95,7 +104,7 @@ const HomePage: React.FC = () => {
     },
     {
       id: 3,
-      name: "Audio",
+      name: "Audio & Headphones",
       slug: "audio",
       image: "/images/categories/audio.jpg", 
       productCount: 234,
@@ -139,7 +148,8 @@ const HomePage: React.FC = () => {
   ];
 
   const handleCategoryClick = (slug: string) => {
-    navigate(`/products?category=${slug}`);
+    // Navigate to hierarchical brand selection instead of direct products
+    navigate(`/category/${slug}/brands`);
   };
 
   const handleSearchProducts = () => {
@@ -248,6 +258,28 @@ const HomePage: React.FC = () => {
               <div className="category-info">
                 <h3 className="category-name">{category.name}</h3>
                 <p className="category-count">{category.productCount} products</p>
+                <div className="category-actions">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/category/${category.slug}/brands`);
+                    }}
+                  >
+                    View Brands
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/category/${category.slug}`);
+                    }}
+                  >
+                    All Products
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}

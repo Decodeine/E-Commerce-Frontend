@@ -14,7 +14,8 @@ import Card from '../UI/Card/Card';
 import Loading from '../UI/Loading/Loading';
 import { useToast } from '../UI/Toast/ToastProvider';
 import ProductCard from '../Products/ProductCard';
-import { fetchWishlist, removeFromWishlist, addProductToCart } from '../../store/actions/storeActions';
+import { fetchWishlist, addProductToCart } from '../../store/actions/storeActions';
+import { productsApi } from '../../services/productsApi';
 import type { AppDispatch } from '../../store/store';
 import './css/Wishlist.css';
 
@@ -24,36 +25,70 @@ interface WishlistItem {
     id: number;
     slug: string;
     name: string;
-    price: number;
-    sale_price?: number;
-    image: string;
-    rating?: number;
-    reviews_count?: number;
+    price: string; // Backend returns string, not number
+    original_price?: string;
+    picture: string; // Backend uses 'picture', not 'image'
+    rating?: string;
+    review_count?: number;
     in_stock: boolean;
-    brand?: string;
+    brand?: {
+      name: string;
+    };
   };
-  added_at: string;
+  added_at: string; // Backend returns 'added_at', not 'added_to_wishlist'
   notes?: string;
 }
 
 const Wishlist: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { wishlist, loading } = useSelector((state: any) => state.store);
-  const { isAuthenticated, user } = useSelector((state: any) => state.auth);
+  const { token } = useSelector((state: any) => state.auth);
+  
+  // Derive isAuthenticated from token
+  const isAuthenticated = !!(token && token.trim() !== '');
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('🐛 Wishlist Debug - Auth State:', {
+      token: token ? `${token.substring(0, 20)}...` : 'null',
+      isAuthenticated,
+      tokenLength: token ? token.length : 0,
+      tokenType: typeof token,
+      fullToken: token // Temporarily log full token for debugging
+    });
+  }, [token, isAuthenticated]);
+  
   const { showToast } = useToast();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'added' | 'price' | 'name'>('added');
 
   useEffect(() => {
-    if (isAuthenticated) {
+    console.log('🔄 Wishlist useEffect - isAuthenticated:', isAuthenticated, 'token:', token ? 'Present' : 'Missing');
+    if (isAuthenticated && token) {
       dispatch(fetchWishlist());
+    } else {
+      console.log('⚠️ Not fetching wishlist - authentication missing');
     }
-  }, [dispatch, isAuthenticated]);
+  }, [dispatch, isAuthenticated, token]);
 
-  const handleRemoveFromWishlist = async (itemId: number) => {
+  const handleRemoveFromWishlist = async (productId: number) => {
+    if (!token) {
+      showToast({
+        type: 'error',
+        title: 'Authentication Required',
+        message: 'Please log in to manage your wishlist.'
+      });
+      return;
+    }
+
     try {
-      await dispatch(removeFromWishlist(itemId));
+      // Use the API directly since you need to pass the token
+      await productsApi.removeProductFromWishlist(productId, token);
+      
+      // Refresh wishlist
+      dispatch(fetchWishlist());
+      
       showToast({
         type: 'success',
         title: 'Removed from Wishlist',
@@ -76,6 +111,26 @@ const Wishlist: React.FC = () => {
       title: 'Added to Cart',
       message: `${product.name} has been added to your cart.`
     });
+  };
+
+  // Adapter function to transform backend data structure to match ProductCard expectations
+  const adaptProductForCard = (wishlistItem: WishlistItem) => {
+    const basePrice = parseFloat(wishlistItem.product.price);
+    const originalPrice = wishlistItem.product.original_price ? parseFloat(wishlistItem.product.original_price) : null;
+    
+    return {
+      id: wishlistItem.product.id,
+      name: wishlistItem.product.name,
+      slug: wishlistItem.product.slug,
+      // If there's an original_price, then the current price is a sale price
+      price: originalPrice || basePrice, // Original price for calculating discount
+      sale_price: originalPrice ? basePrice : undefined, // Current price if on sale
+      image: wishlistItem.product.picture, // Map picture to image
+      rating: wishlistItem.product.rating ? parseFloat(wishlistItem.product.rating) : undefined,
+      reviews_count: wishlistItem.product.review_count,
+      in_stock: wishlistItem.product.in_stock,
+      brand: wishlistItem.product.brand
+    };
   };
 
   const handleShareWishlist = () => {
@@ -104,8 +159,8 @@ const Wishlist: React.FC = () => {
         case 'added':
           return new Date(b.added_at).getTime() - new Date(a.added_at).getTime();
         case 'price':
-          const priceA = a.product.sale_price || a.product.price;
-          const priceB = b.product.sale_price || b.product.price;
+          const priceA = parseFloat(a.product.price);
+          const priceB = parseFloat(b.product.price);
           return priceA - priceB;
         case 'name':
           return a.product.name.localeCompare(b.product.name);
@@ -223,9 +278,9 @@ const Wishlist: React.FC = () => {
             {sortedWishlist.map((item: WishlistItem) => (
               <div key={item.id} className="wishlist-item-wrapper">
                 <ProductCard
-                  product={item.product}
+                  product={adaptProductForCard(item)}
                   onAddToCart={() => handleAddToCart(item.product)}
-                  onToggleWishlist={() => handleRemoveFromWishlist(item.id)}
+                  onToggleWishlist={() => handleRemoveFromWishlist(item.product.id)}
                   isInWishlist={true}
                 />
                 <div className="wishlist-item-meta">
@@ -245,22 +300,22 @@ const Wishlist: React.FC = () => {
               <Card key={item.id} className="wishlist-list-item" padding="md">
                 <div className="list-item-content">
                   <div className="item-image">
-                    <img src={item.product.image} alt={item.product.name} />
+                    <img src={item.product.picture} alt={item.product.name} />
                   </div>
                   
                   <div className="item-details">
                     <h3 className="item-name">{item.product.name}</h3>
-                    {item.product.brand && (
-                      <p className="item-brand">by {item.product.brand}</p>
+                    {item.product.brand?.name && (
+                      <p className="item-brand">by {item.product.brand.name}</p>
                     )}
                     
                     <div className="item-price">
                       <span className="current-price">
-                        ${(item.product.sale_price || item.product.price).toFixed(2)}
+                        ${parseFloat(item.product.price).toFixed(2)}
                       </span>
-                      {item.product.sale_price && (
+                      {item.product.original_price && (
                         <span className="original-price">
-                          ${item.product.price.toFixed(2)}
+                          ${parseFloat(item.product.original_price).toFixed(2)}
                         </span>
                       )}
                     </div>
@@ -272,12 +327,12 @@ const Wishlist: React.FC = () => {
                             <FontAwesomeIcon
                               key={i}
                               icon={faStar}
-                              className={i < Math.floor(item.product.rating!) ? 'star-filled' : 'star-empty'}
+                              className={i < Math.floor(parseFloat(item.product.rating)) ? 'star-filled' : 'star-empty'}
                             />
                           ))}
                         </div>
                         <span className="rating-text">
-                          ({item.product.reviews_count} reviews)
+                          ({item.product.review_count} reviews)
                         </span>
                       </div>
                     )}
@@ -310,7 +365,7 @@ const Wishlist: React.FC = () => {
                       variant="outline"
                       size="sm"
                       icon={faTrash}
-                      onClick={() => handleRemoveFromWishlist(item.id)}
+                      onClick={() => handleRemoveFromWishlist(item.product.id)}
                       className="remove-btn"
                     >
                       Remove

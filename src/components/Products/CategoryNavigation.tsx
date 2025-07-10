@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faLaptop, 
@@ -28,9 +28,35 @@ interface Category {
 
 const CategoryNavigation: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Extract current category from URL path
+  const getCurrentCategory = () => {
+    const pathParts = location.pathname.split('/');
+    if (pathParts[1] === 'category' && pathParts[2]) {
+      return pathParts[2];
+    }
+    if (pathParts[1] === 'brand' && pathParts[3] === 'category' && pathParts[4]) {
+      return pathParts[4];
+    }
+    // Fallback to search params for backward compatibility
+    return searchParams.get('category');
+  };
+
+  const getCurrentBrand = () => {
+    const pathParts = location.pathname.split('/');
+    if (pathParts[1] === 'brand' && pathParts[2]) {
+      return pathParts[2];
+    }
+    return null;
+  };
+
+  const currentCategory = getCurrentCategory();
+  const currentBrand = getCurrentBrand();
+  const currentSubcategory = searchParams.get('subcategory');
 
   const categories: Category[] = [
     {
@@ -63,7 +89,7 @@ const CategoryNavigation: React.FC = () => {
     },
     {
       id: 'audio',
-      name: 'Audio',
+      name: 'Audio & Headphones',
       icon: faHeadphones,
       subcategories: [
         { id: 'headphones', name: 'Headphones', icon: faHeadphones },
@@ -93,24 +119,27 @@ const CategoryNavigation: React.FC = () => {
     }
   ];
 
-  const currentCategory = searchParams.get('category');
-  const currentSubcategory = searchParams.get('subcategory');
-
-  const handleCategoryClick = (categoryId: string, subcategoryId?: string) => {
-    const params = new URLSearchParams(searchParams);
+  const handleCategoryClick = (categoryId: string, subcategoryId?: string, viewType: 'products' | 'brands' = 'products') => {
+    const actualCategoryId = subcategoryId || categoryId;
     
-    if (subcategoryId) {
-      params.set('category', categoryId);
-      params.set('subcategory', subcategoryId);
+    // If we're currently viewing a brand and clicking a category, navigate to brand+category
+    if (currentBrand && viewType === 'products') {
+      navigate(`/brand/${currentBrand}/category/${actualCategoryId}`);
+    } else if (subcategoryId) {
+      // For subcategories, navigate to the subcategory route
+      if (viewType === 'brands') {
+        navigate(`/category/${subcategoryId}/brands`);
+      } else {
+        navigate(`/category/${subcategoryId}`);
+      }
     } else {
-      params.set('category', categoryId);
-      params.delete('subcategory');
+      // For main categories, navigate to the category route
+      if (viewType === 'brands') {
+        navigate(`/category/${categoryId}/brands`);
+      } else {
+        navigate(`/category/${categoryId}`);
+      }
     }
-    
-    // Reset to first page when changing category
-    params.delete('page');
-    
-    navigate(`/products?${params.toString()}`);
     setShowMobileMenu(false);
   };
 
@@ -143,7 +172,8 @@ const CategoryNavigation: React.FC = () => {
             } else {
               handleCategoryClick(
                 isSubcategory ? (currentCategory || '') : category.id,
-                isSubcategory ? category.id : undefined
+                isSubcategory ? category.id : undefined,
+                'products'
               );
             }
           }}
@@ -162,6 +192,17 @@ const CategoryNavigation: React.FC = () => {
             />
           )}
         </button>
+
+        {/* Brand Navigation Button for main categories */}
+        {!isSubcategory && (
+          <button
+            className="brands-button"
+            onClick={() => handleCategoryClick(category.id, undefined, 'brands')}
+            title={`View brands in ${category.name}`}
+          >
+            View Brands
+          </button>
+        )}
 
         {hasSubcategories && isExpanded && (
           <div className="subcategories">

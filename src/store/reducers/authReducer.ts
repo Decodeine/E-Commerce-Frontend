@@ -6,17 +6,18 @@ import {
   AUTH_CLEAR_ERRORS
 } from "../actions/authActions";
 import { updateObject } from "../utility";
+import { SerializedError } from "../utils/errorSerializer";
 
 interface AuthState {
   token: string | null;
-  error: any;
+  error: SerializedError | null;
   loading: boolean;
 }
 
 interface AuthAction {
   type: string;
   token?: string | null;
-  error?: any;
+  error?: SerializedError;
 }
 
 const initialState: AuthState = {

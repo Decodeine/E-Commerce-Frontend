@@ -9,10 +9,12 @@ import {
   faHeart,
   faCheck,
   faMinus,
-  faTrash
+  faTrash,
+  faSearch
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
+import Modal from '../UI/Modal/Modal';
 import ProductCard from '../Products/ProductCard';
 import { 
   fetchComparison, 
@@ -22,6 +24,7 @@ import {
   addProductToCart,
   addToWishlist 
 } from '../../store/actions/storeActions';
+import { productsApi } from '../../services/productsApi';
 import type { AppDispatch } from '../../store/store';
 import { Product } from '../../services/productsApi';
 import './css/ProductComparison.css';
@@ -35,12 +38,42 @@ interface ComparisonFeature {
 const ProductComparison: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { comparison, loading } = useSelector((state: any) => state.store);
-  const { isAuthenticated } = useSelector((state: any) => state.auth);
+  const { token } = useSelector((state: any) => state.auth);
   
+  // Derive isAuthenticated from token
+  const isAuthenticated = !!(token && token.trim() !== '');
+  
+  const [currentComparisonId, setCurrentComparisonId] = useState<number | null>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [viewMode, setViewMode] = useState<'overview' | 'detailed'>('overview');
+
+  // Extract products array from comparison data structure
+  const comparisonProducts = React.useMemo(() => {
+    if (!comparison) return [];
+    
+    // Handle different possible data structures
+    if (Array.isArray(comparison)) {
+      // If comparison is an array of comparisons, take the first one
+      if (comparison.length > 0 && comparison[0].products) {
+        if (comparison[0].id && currentComparisonId !== comparison[0].id) {
+          setCurrentComparisonId(comparison[0].id);
+        }
+        return comparison[0].products;
+      }
+      return [];
+    }
+    
+    if (comparison.products && Array.isArray(comparison.products)) {
+      if (comparison.id && currentComparisonId !== comparison.id) {
+        setCurrentComparisonId(comparison.id);
+      }
+      return comparison.products;
+    }
+    
+    return [];
+  }, [comparison, currentComparisonId]);
 
   // Sample comparison features - can be customized per category
   const comparisonFeatures: ComparisonFeature[] = [
@@ -55,11 +88,37 @@ const ProductComparison: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (comparison.length > 0) {
-      const productIds = comparison.map((product: Product) => product.id);
-      dispatch(fetchComparison(productIds));
-    }
-  }, [dispatch]);
+    const initializeComparison = async () => {
+      if (!isAuthenticated || !token) {
+        // If not authenticated, just fetch comparison data without creating new ones
+        dispatch(fetchComparison());
+        return;
+      }
+
+      try {
+        // First, try to fetch existing comparisons
+        dispatch(fetchComparison());
+        
+        // If user is authenticated, check if they have existing comparisons
+        const existingComparisons = await productsApi.getProductComparisons(token);
+        
+        if (!existingComparisons || existingComparisons.length === 0) {
+          // Create a new comparison only when user tries to add a product
+          console.log('No existing comparisons found - will create when adding first product');
+        } else if (existingComparisons[0] && existingComparisons[0].id) {
+          // Use the first existing comparison
+          setCurrentComparisonId(existingComparisons[0].id);
+          console.log('Using existing comparison:', existingComparisons[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to initialize comparison:', error);
+        // Fallback to just fetching comparison data
+        dispatch(fetchComparison());
+      }
+    };
+
+    initializeComparison();
+  }, [dispatch, isAuthenticated, token]);
 
   const handleAddToCart = (product: Product) => {
     dispatch(addProductToCart(product, 1));
@@ -75,12 +134,102 @@ const ProductComparison: React.FC = () => {
     }
   };
 
-  const handleRemoveFromComparison = (productId: number) => {
-    dispatch(removeFromComparison(productId));
+  const handleRemoveFromComparison = async (productId: number) => {
+    if (!isAuthenticated || !token || !currentComparisonId) {
+      console.warn('Cannot remove from comparison: missing auth or comparison ID');
+      return;
+    }
+
+    try {
+      await productsApi.removeProductFromComparison(currentComparisonId, productId, token);
+      dispatch(fetchComparison()); // Refresh the comparison data
+    } catch (error) {
+      console.error('Failed to remove from comparison:', error);
+      alert('Failed to remove product from comparison. Please try again.');
+    }
   };
 
-  const handleClearComparison = () => {
-    dispatch(clearComparisonList());
+  const handleClearComparison = async () => {
+    if (!isAuthenticated || !token || !currentComparisonId) {
+      console.warn('Cannot clear comparison: missing auth or comparison ID');
+      return;
+    }
+
+    try {
+      // Remove all products from comparison
+      for (const product of comparisonProducts) {
+        await productsApi.removeProductFromComparison(currentComparisonId, product.id, token);
+      }
+      dispatch(fetchComparison()); // Refresh the comparison data
+    } catch (error) {
+      console.error('Failed to clear comparison:', error);
+      alert('Failed to clear comparison. Please try again.');
+    }
+  };
+
+  // Search products for adding to comparison
+  const handleSearchProducts = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const response = await productsApi.getProducts({ search: query, page: 1, page_size: 10 });
+      setSearchResults(response.results || []);
+    } catch (error) {
+      console.error('Failed to search products:', error);
+      setSearchResults([]);
+    }
+  };
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      handleSearchProducts(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // TODO: In a production app, you should:
+  // 1. Create a comparison on component mount or when first product is added
+  // 2. Store the comparison ID in component state or Redux
+  // 3. Use that ID for all add/remove operations
+  // 4. Handle the case where user is not authenticated
+
+  const handleAddToComparison = async (productId: number) => {
+    if (!isAuthenticated || !token) {
+      alert('Please log in to add products to comparison');
+      return;
+    }
+
+    if (!currentComparisonId) {
+      try {
+        // Create a new comparison if none exists
+        console.log('Creating new comparison for user');
+        const newComparison = await productsApi.createProductComparison(token);
+        setCurrentComparisonId(newComparison.id);
+        
+        // Now add the product to the new comparison
+        await productsApi.addProductToComparison(newComparison.id, productId, token);
+        dispatch(fetchComparison()); // Refresh the comparison data
+        setShowAddProduct(false);
+      } catch (error) {
+        console.error('Failed to create comparison and add product:', error);
+        alert('Failed to add product to comparison. Please try again.');
+      }
+      return;
+    }
+    
+    try {
+      await productsApi.addProductToComparison(currentComparisonId, productId, token);
+      dispatch(fetchComparison()); // Refresh the comparison data
+      setShowAddProduct(false);
+    } catch (error) {
+      console.error('Failed to add to comparison:', error);
+      alert('Failed to add product to comparison. Please try again.');
+    }
   };
 
   const getNestedValue = (obj: any, path: string) => {
@@ -134,7 +283,7 @@ const ProductComparison: React.FC = () => {
     );
   }
 
-  if (comparison.length === 0) {
+  if (comparisonProducts.length === 0) {
     return (
       <div className="comparison-container">
         <Card className="empty-comparison-card">
@@ -169,7 +318,7 @@ const ProductComparison: React.FC = () => {
               Product Comparison
             </h1>
             <p className="comparison-count">
-              Comparing {comparison.length} product{comparison.length !== 1 ? 's' : ''}
+              Comparing {comparisonProducts.length} product{comparisonProducts.length !== 1 ? 's' : ''}
             </p>
           </div>
           <div className="header-actions">
@@ -190,7 +339,7 @@ const ProductComparison: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={() => setShowAddProduct(true)}
-              disabled={comparison.length >= 4}
+              disabled={comparisonProducts.length >= 4}
             >
               <FontAwesomeIcon icon={faPlus} />
               Add Product
@@ -209,22 +358,37 @@ const ProductComparison: React.FC = () => {
 
       {/* Comparison Table */}
       <div className="comparison-content">
-        <div className="comparison-table">
-          {/* Product Headers */}
-          <div className="table-header">
-            <div className="feature-column header-label">
-              Features
+        {comparisonProducts.length === 0 ? (
+          <div className="empty-comparison">
+            <div className="empty-content">
+              <FontAwesomeIcon icon={faBalanceScale} size="3x" />
+              <h3>No Products to Compare</h3>
+              <p>Add products to your comparison list to see detailed comparisons.</p>
+              <Button 
+                variant="primary" 
+                onClick={() => setShowAddProduct(true)}
+              >
+                <FontAwesomeIcon icon={faPlus} /> Add Products
+              </Button>
             </div>
-            {comparison.map((product: Product) => (
-              <div key={product.id} className="product-column">
-                <div className="product-header">
-                  <button 
-                    className="remove-product-btn"
-                    onClick={() => handleRemoveFromComparison(product.id)}
-                    title="Remove from comparison"
-                  >
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
+          </div>
+        ) : (
+          <div className="comparison-table">
+            {/* Product Headers */}
+            <div className="table-header">
+              <div className="feature-column header-label">
+                Features
+              </div>
+              {comparisonProducts.map((product: Product) => (
+                <div key={product.id} className="product-column">
+                  <div className="product-header">
+                    <button 
+                      className="remove-product-btn"
+                      onClick={() => handleRemoveFromComparison(product.id)}
+                      title="Remove from comparison"
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </button>
                   <div className="product-image">
                     <img src={product.picture} alt={product.name} />
                   </div>
@@ -272,7 +436,7 @@ const ProductComparison: React.FC = () => {
                 <div className="feature-column feature-label">
                   {feature.label}
                 </div>
-                {comparison.map((product: Product) => (
+                {comparisonProducts.map((product: Product) => (
                   <div key={product.id} className="product-column feature-value">
                     {renderFeatureValue(product, feature)}
                   </div>
@@ -281,21 +445,24 @@ const ProductComparison: React.FC = () => {
             ))}
           </div>
         </div>
+      )}
       </div>
 
       {/* Recommendations */}
-      {comparison.length > 0 && (
+      {comparisonProducts.length > 0 && (
         <div className="comparison-recommendations">
           <Card>
             <h3>Our Recommendation</h3>
             <div className="recommendation-content">
               {(() => {
                 // Simple recommendation logic - highest rated product
-                const bestProduct = comparison.reduce((best: Product, current: Product) => {
+                if (comparisonProducts.length === 0) return null;
+                
+                const bestProduct = comparisonProducts.reduce((best: Product, current: Product) => {
                   const bestRating = best.reviews_summary?.average_rating || 0;
                   const currentRating = current.reviews_summary?.average_rating || 0;
                   return currentRating > bestRating ? current : best;
-                }, comparison[0]);
+                }, comparisonProducts[0]);
 
                 return (
                   <div className="recommended-product">
@@ -314,6 +481,106 @@ const ProductComparison: React.FC = () => {
           </Card>
         </div>
       )}
+
+      {/* Add Product Modal */}
+      <Modal 
+        isOpen={showAddProduct} 
+        onClose={() => setShowAddProduct(false)}
+        title="Add Products to Compare"
+        size="lg"
+      >
+        <div className="add-product-modal-content">
+          <div className="search-container">
+            <div className="search-input-wrapper">
+              <FontAwesomeIcon icon={faSearch} className="search-icon" />
+              <input 
+                type="text" 
+                placeholder="Search for products to add to comparison..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+                autoFocus
+              />
+            </div>
+            {searchQuery && (
+              <p className="search-info">
+                {searchResults.length > 0 
+                  ? `Found ${searchResults.length} products`
+                  : 'No products found'
+                }
+              </p>
+            )}
+          </div>
+          
+          <div className="search-results">
+            {!searchQuery && (
+              <div className="search-placeholder">
+                <FontAwesomeIcon icon={faSearch} size="2x" />
+                <h3>Search for Products</h3>
+                <p>Type in the search box above to find products to add to your comparison.</p>
+                <p>You can compare up to 4 products at once.</p>
+              </div>
+            )}
+
+            {searchQuery && searchResults.length === 0 && (
+              <div className="no-results">
+                <FontAwesomeIcon icon={faTimes} />
+                <p>No products found for "{searchQuery}"</p>
+                <p>Try searching with different keywords.</p>
+              </div>
+            )}
+            
+            {searchResults.length > 0 && (
+              <div className="product-results">
+                {searchResults.map((product) => {
+                  const isAlreadyInComparison = comparisonProducts.some(
+                    (p: Product) => p.id === product.id
+                  );
+                  
+                  return (
+                    <div key={product.id} className="search-result-item">
+                      <div className="product-info">
+                        <img 
+                          src={product.picture} 
+                          alt={product.name}
+                          className="product-thumbnail"
+                        />
+                        <div className="product-details">
+                          <h4 className="product-name">{product.name}</h4>
+                          <p className="product-brand">{product.brand?.name}</p>
+                          <div className="product-price">
+                            ${parseFloat(product.price || '0').toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="product-actions">
+                        {isAlreadyInComparison ? (
+                          <Button variant="outline" disabled>
+                            <FontAwesomeIcon icon={faCheck} />
+                            Already Added
+                          </Button>
+                        ) : comparisonProducts.length >= 4 ? (
+                          <Button variant="outline" disabled>
+                            Comparison Full
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="primary"
+                            onClick={() => handleAddToComparison(product.id)}
+                          >
+                            <FontAwesomeIcon icon={faPlus} />
+                            Add to Compare
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

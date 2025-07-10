@@ -2,11 +2,17 @@ import { ThunkAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { RootState } from '../store';
 import { AnyAction } from "redux";
 import productsApi, { FilterParams, Product, Brand, Category } from "../../services/productsApi";
+import { serializeError, SerializedError } from '../utils/errorSerializer';
 
 // Action Types
 export const FETCH_PRODUCTS_START = "FETCH_PRODUCTS_START";
 export const FETCH_PRODUCTS_SUCCESS = "FETCH_PRODUCTS_SUCCESS";
 export const FETCH_PRODUCTS_FAIL = "FETCH_PRODUCTS_FAIL";
+
+// General loading and error states
+export const SET_LOADING = "SET_LOADING";
+export const SET_ERROR = "SET_ERROR";
+export const CLEAR_ERROR = "CLEAR_ERROR";
 
 // New action types for enhanced functionality
 export const FETCH_FEATURED_PRODUCTS_SUCCESS = "FETCH_FEATURED_PRODUCTS_SUCCESS";
@@ -107,12 +113,7 @@ export const fetchProducts = (
         hasPrevious: !!response.previous
       }));
     } catch (err: any) {
-      const serializedError = {
-        message: err.message || 'An error occurred',
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data
-      };
+      const serializedError = serializeError(err);
       dispatch(fetchProductsFail(serializedError));
     }
   };
@@ -182,10 +183,16 @@ export const fetchBrands = (): ThunkAction<Promise<void>, RootState, unknown, An
 export const fetchCategories = (): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
   return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>) => {
     try {
-      const categories = await productsApi.getCategories();
+      const categoriesResponse = await productsApi.getCategories();
+      
+      // Ensure categories is an array before dispatching
+      const categories = Array.isArray(categoriesResponse) ? categoriesResponse : [];
+      
       dispatch(fetchCategoriesSuccess(categories));
     } catch (err: any) {
       console.error('Failed to fetch categories:', err);
+      // Dispatch empty array on error to prevent crashes
+      dispatch(fetchCategoriesSuccess([]));
     }
   };
 };
@@ -195,12 +202,26 @@ export const fetchProductsStart = () => ({
   type: FETCH_PRODUCTS_START
 });
 
+export const setLoading = (loading: boolean) => ({
+  type: SET_LOADING,
+  payload: loading
+});
+
+export const setError = (error: string | null) => ({
+  type: SET_ERROR,
+  payload: error
+});
+
+export const clearError = () => ({
+  type: CLEAR_ERROR
+});
+
 export const fetchProductsSuccess = (response: any) => ({
   type: FETCH_PRODUCTS_SUCCESS,
   payload: response
 });
 
-export const fetchProductsFail = (error: any) => ({
+export const fetchProductsFail = (error: SerializedError) => ({
   type: FETCH_PRODUCTS_FAIL,
   error
 });
@@ -261,7 +282,7 @@ export const fetchWishlistSuccess = (wishlist: any) => ({
   payload: wishlist
 });
 
-export const fetchWishlistFail = (error: any) => ({
+export const fetchWishlistFail = (error: SerializedError) => ({
   type: FETCH_WISHLIST_FAIL,
   error
 });
@@ -291,7 +312,7 @@ export const fetchPriceAlertsSuccess = (alerts: any) => ({
   payload: alerts
 });
 
-export const fetchPriceAlertsFail = (error: any) => ({
+export const fetchPriceAlertsFail = (error: SerializedError) => ({
   type: FETCH_PRICE_ALERTS_FAIL,
   error
 });
@@ -341,7 +362,7 @@ export const fetchProductReviewsSuccess = (reviews: any) => ({
   payload: reviews
 });
 
-export const fetchProductReviewsFail = (error: any) => ({
+export const fetchProductReviewsFail = (error: SerializedError) => ({
   type: FETCH_PRODUCT_REVIEWS_FAIL,
   error
 });
@@ -471,17 +492,20 @@ export const fetchWishlist = (): ThunkAction<Promise<void>, RootState, unknown, 
     const { auth } = getState() as RootState;
     
     if (!auth.token) {
-      console.error('No authentication token available');
+      console.error('No authentication token available for fetchWishlist');
+      dispatch(fetchWishlistFail(serializeError(new Error('No authentication token'))));
       return;
     }
 
     try {
+      console.log('🔐 Fetching wishlist with token:', auth.token ? 'Present' : 'Missing');
       dispatch(fetchWishlistStart());
       const wishlist = await productsApi.getWishlist(auth.token);
+      console.log('✅ Wishlist fetch successful:', wishlist);
       dispatch(fetchWishlistSuccess(wishlist));
     } catch (err: any) {
-      console.error('Failed to fetch wishlist:', err);
-      dispatch(fetchWishlistFail(err.message));
+      console.error('❌ Failed to fetch wishlist:', err);
+      dispatch(fetchWishlistFail(serializeError(err)));
     }
   };
 };
@@ -496,7 +520,7 @@ export const addToWishlist = (productId: number): ThunkAction<Promise<void>, Roo
     }
 
     try {
-      const wishlistItem = await productsApi.addToWishlist(productId, auth.token);
+      const wishlistItem = await productsApi.addProductToWishlist(productId, auth.token);
       dispatch(addToWishlistSuccess(wishlistItem));
     } catch (err: any) {
       console.error('Failed to add to wishlist:', err);
@@ -504,7 +528,7 @@ export const addToWishlist = (productId: number): ThunkAction<Promise<void>, Roo
   };
 };
 
-export const removeFromWishlist = (wishlistItemId: number): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
+export const removeFromWishlist = (productId: number): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
   return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>, getState) => {
     const { auth } = getState() as RootState;
     
@@ -514,31 +538,15 @@ export const removeFromWishlist = (wishlistItemId: number): ThunkAction<Promise<
     }
 
     try {
-      await productsApi.removeFromWishlist(wishlistItemId, auth.token);
-      dispatch(removeFromWishlistSuccess(wishlistItemId));
+      await productsApi.removeProductFromWishlist(productId, auth.token);
+      dispatch(removeFromWishlistSuccess(productId));
     } catch (err: any) {
       console.error('Failed to remove from wishlist:', err);
     }
   };
 };
 
-export const updateWishlistItem = (wishlistItemId: number, data: any): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
-  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>, getState) => {
-    const { auth } = getState() as RootState;
-    
-    if (!auth.token) {
-      console.error('No authentication token available');
-      return;
-    }
-
-    try {
-      const updatedItem = await productsApi.updateWishlistItem(wishlistItemId, data, auth.token);
-      dispatch(updateWishlistItemSuccess(updatedItem));
-    } catch (err: any) {
-      console.error('Failed to update wishlist item:', err);
-    }
-  };
-};
+// Removed updateWishlistItem action as the API method doesn't exist in the current implementation
 
 // Price Alerts thunk actions
 export const fetchPriceAlerts = (): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
@@ -556,7 +564,7 @@ export const fetchPriceAlerts = (): ThunkAction<Promise<void>, RootState, unknow
       dispatch(fetchPriceAlertsSuccess(alerts));
     } catch (err: any) {
       console.error('Failed to fetch price alerts:', err);
-      dispatch(fetchPriceAlertsFail(err.message));
+      dispatch(fetchPriceAlertsFail(serializeError(err)));
     }
   };
 };
@@ -621,10 +629,17 @@ export const deletePriceAlert = (alertId: number): ThunkAction<Promise<void>, Ro
 };
 
 // Product Comparison thunk actions
-export const fetchComparison = (productIds: number[]): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
-  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>) => {
+export const fetchComparison = (): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
+  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>, getState) => {
+    const { auth } = getState() as RootState;
+    
+    if (!auth.token) {
+      console.error('No authentication token available');
+      return;
+    }
+
     try {
-      const comparisonData = await productsApi.getComparison(productIds);
+      const comparisonData = await productsApi.getProductComparisons(auth.token);
       dispatch(fetchComparisonSuccess(comparisonData));
     } catch (err: any) {
       console.error('Failed to fetch comparison:', err);
@@ -632,12 +647,19 @@ export const fetchComparison = (productIds: number[]): ThunkAction<Promise<void>
   };
 };
 
-export const addToComparison = (productId: number): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
-  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>) => {
+export const addToComparison = (comparisonId: number, productId: number): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
+  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>, getState) => {
+    const { auth } = getState() as RootState;
+    
+    if (!auth.token) {
+      console.error('No authentication token available');
+      return;
+    }
+
     try {
-      const result = await productsApi.addToComparison(productId);
-      // Fetch the product details for the comparison
-      const product = await productsApi.getProduct(productId.toString());
+      await productsApi.addProductToComparison(comparisonId, productId, auth.token);
+      // Fetch the product details for the comparison using the new getProductById method
+      const product = await productsApi.getProductById(productId);
       dispatch(addToComparisonSuccess(product));
     } catch (err: any) {
       console.error('Failed to add to comparison:', err);
@@ -645,10 +667,17 @@ export const addToComparison = (productId: number): ThunkAction<Promise<void>, R
   };
 };
 
-export const removeFromComparison = (productId: number): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
-  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>) => {
+export const removeFromComparison = (comparisonId: number, productId: number): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
+  return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>, getState) => {
+    const { auth } = getState() as RootState;
+    
+    if (!auth.token) {
+      console.error('No authentication token available');
+      return;
+    }
+
     try {
-      await productsApi.removeFromComparison(productId);
+      await productsApi.removeProductFromComparison(comparisonId, productId, auth.token);
       dispatch(removeFromComparisonSuccess(productId));
     } catch (err: any) {
       console.error('Failed to remove from comparison:', err);
@@ -659,7 +688,8 @@ export const removeFromComparison = (productId: number): ThunkAction<Promise<voi
 export const clearComparisonList = (): ThunkAction<Promise<void>, RootState, unknown, AnyAction> => {
   return async (dispatch: ThunkDispatch<RootState, unknown, AnyAction>) => {
     try {
-      await productsApi.clearComparison();
+      // For clearing comparison, we'll just dispatch the clear action
+      // The backend doesn't seem to have a clear endpoint
       dispatch(clearComparison());
     } catch (err: any) {
       console.error('Failed to clear comparison:', err);
@@ -676,7 +706,7 @@ export const fetchProductReviews = (productId: number, params?: any): ThunkActio
       dispatch(fetchProductReviewsSuccess(reviews));
     } catch (err: any) {
       console.error('Failed to fetch product reviews:', err);
-      dispatch(fetchProductReviewsFail(err.message));
+      dispatch(fetchProductReviewsFail(serializeError(err)));
     }
   };
 };
