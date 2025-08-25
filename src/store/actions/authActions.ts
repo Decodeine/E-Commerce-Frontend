@@ -62,20 +62,20 @@ export const authLogin = (
     dispatch(authStart());
     try {
       // Use JWT token endpoint instead of dj_rest_auth
-      const res = await axios.post(`${API_PATH}accounts/auth/token/`, {
+      const res = await axios.post(`${API_PATH}accounts/auth/login/`, {
         email,
         password
       });
-      
+
       console.log('🔐 Login response:', res.data);
-      
+
       // JWT returns 'access' and 'refresh' tokens
       const token = res.data.access;
       const refreshToken = res.data.refresh;
-      
+
       // Store both tokens
       localStorage.setItem("refreshToken", refreshToken);
-      
+
       const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
       dispatch(authSuccess(token, expirationDate));
       dispatch(checkAuthTimeout(3600));
@@ -104,20 +104,20 @@ export const authSignup = (
         first_name,
         last_name
       });
-      
+
       // Then login to get JWT tokens
       const loginRes = await axios.post(`${API_PATH}accounts/auth/token/`, {
         email,
         password: password1
       });
-      
+
       console.log('🔐 Signup/Login response:', loginRes.data);
-      
+
       const token = loginRes.data.access;
       const refreshToken = loginRes.data.refresh;
-      
+
       localStorage.setItem("refreshToken", refreshToken);
-      
+
       const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
       dispatch(authSuccess(token, expirationDate));
       dispatch(checkAuthTimeout(3600));
@@ -133,7 +133,7 @@ export const authCheckState = ():
   return (dispatch: ThunkDispatch<RootState, unknown, AnyAction>) => {
     const token = localStorage.getItem("token");
     console.log('🔍 Auth check state - token from localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
-    
+
     if (!token) {
       console.log('❌ No token found, logging out');
       dispatch(authLogout());
@@ -151,7 +151,7 @@ export const authCheckState = ():
         isExpired: expirationDate <= new Date(),
         timeRemaining: (expirationDate.getTime() - new Date().getTime()) / 1000 / 60 + ' minutes'
       });
-      
+
       if (expirationDate <= new Date()) {
         console.log('❌ Token expired, logging out');
         dispatch(authLogout());
@@ -181,13 +181,13 @@ export const authRefreshToken = ():
       const res = await axios.post(`${API_PATH}accounts/auth/token/refresh/`, {
         refresh: refreshToken
       });
-      
+
       const newToken = res.data.access;
       const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
-      
+
       dispatch(authSuccess(newToken, expirationDate));
       dispatch(checkAuthTimeout(3600));
-      
+
       console.log('🔄 Token refreshed successfully');
       return true;
     } catch (err) {

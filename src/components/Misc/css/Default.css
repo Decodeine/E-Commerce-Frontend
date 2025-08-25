@@ -18,7 +18,7 @@
   right: 0;
   bottom: 0;
   background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -72,6 +72,7 @@
   from {
     box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
   }
+
   to {
     box-shadow: 0 0 40px rgba(255, 193, 7, 0.6), 0 0 60px rgba(255, 193, 7, 0.3);
   }
@@ -241,41 +242,41 @@
     padding: 1rem;
     min-height: 70vh;
   }
-  
+
   .error-icon {
     width: 100px;
     height: 100px;
     font-size: 2.5rem;
   }
-  
+
   .error-code {
     font-size: 3rem;
   }
-  
+
   .error-title {
     font-size: 2rem;
   }
-  
+
   .error-description {
     font-size: 1rem;
   }
-  
+
   .error-actions {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .primary-action,
   .secondary-action {
     width: 100%;
     max-width: 250px;
   }
-  
+
   .links-grid {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .help-link {
     width: 100%;
     max-width: 250px;
@@ -289,15 +290,15 @@
     height: 80px;
     font-size: 2rem;
   }
-  
+
   .error-code {
     font-size: 2.5rem;
   }
-  
+
   .error-title {
     font-size: 1.75rem;
   }
-  
+
   .primary-action,
   .secondary-action {
     padding: 0.875rem 1.5rem !important;
@@ -307,27 +308,27 @@
 
 /* Animation on load */
 @media (prefers-reduced-motion: no-preference) {
-  .error-content > * {
+  .error-content>* {
     animation: fadeInUp 0.6s ease forwards;
     animation-delay: var(--delay, 0s);
   }
-  
+
   .error-visual {
     --delay: 0s;
   }
-  
+
   .error-message {
     --delay: 0.1s;
   }
-  
+
   .error-actions {
     --delay: 0.2s;
   }
-  
+
   .helpful-links {
     --delay: 0.3s;
   }
-  
+
   .search-suggestion {
     --delay: 0.4s;
   }
@@ -338,6 +339,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -357,10 +359,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.1) 0%, 
-    rgba(255, 255, 255, 0.05) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.05) 100%);
   border-radius: inherit;
   pointer-events: none;
 }

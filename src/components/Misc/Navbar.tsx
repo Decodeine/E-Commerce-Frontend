@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 import SearchForm from "../Products/SearchForm";
 import jwt_decode from "jwt-decode";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faTruck, 
-  faShoppingCart, 
-  faUser, 
-  faSignInAlt, 
-  faSignOutAlt, 
+import {
+  faTruck,
+  faShoppingCart,
+  faUser,
+  faSignInAlt,
+  faSignOutAlt,
   faUserPlus,
   faBars,
   faTimes,
@@ -19,7 +19,7 @@ import {
 import { authLogout } from "../../store/actions/authActions";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
-import "./css/Navbar.css";
+import "./css/navbar.css";
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -88,166 +88,166 @@ const Navbar: React.FC = () => {
 
       {/* Tier 2: Main Navigation */}
       <nav className="main-navbar">
-      {/* Tier 2: Main Navigation */}
-      <nav className="main-navbar">
-        <div className="container">
-          <div className="navbar-content">
-            {/* Brand */}
-            <div className="navbar-brand">
-              <Link to="/" className="brand-link" onClick={closeMenus}>
-                <span className="brand-text">eCommerce</span>
-              </Link>
-            </div>
+        {/* Tier 2: Main Navigation */}
+        <nav className="main-navbar">
+          <div className="container">
+            <div className="navbar-content">
+              {/* Brand */}
+              <div className="navbar-brand">
+                <Link to="/" className="brand-link" onClick={closeMenus}>
+                  <span className="brand-text">eCommerce</span>
+                </Link>
+              </div>
 
-            {/* Search Bar (Center) */}
-            <div className="navbar-search">
-              <SearchForm />
-            </div>
+              {/* Search Bar (Center) */}
+              <div className="navbar-search">
+                <SearchForm />
+              </div>
 
-            {/* Actions (Right) */}
-            <div className="navbar-actions">
-              {/* Cart */}
-              <Link to="/cart" className="action-link cart-link" onClick={closeMenus}>
-                <div className="action-icon">
-                  <FontAwesomeIcon icon={faShoppingCart} />
-                  {cartItemCount() > 0 && (
-                    <span className="cart-badge">{cartItemCount()}</span>
-                  )}
-                </div>
-                <span className="action-label desktop-only">Cart</span>
-              </Link>
+              {/* Actions (Right) */}
+              <div className="navbar-actions">
+                {/* Cart */}
+                <Link to="/cart" className="action-link cart-link" onClick={closeMenus}>
+                  <div className="action-icon">
+                    <FontAwesomeIcon icon={faShoppingCart} />
+                    {cartItemCount() > 0 && (
+                      <span className="cart-badge">{cartItemCount()}</span>
+                    )}
+                  </div>
+                  <span className="action-label desktop-only">Cart</span>
+                </Link>
 
-              {/* User Menu */}
-              {isAuthenticated ? (
-                <div className="user-menu-container">
-                  <button
-                    className="user-menu-trigger"
-                    onClick={toggleUserMenu}
-                    aria-expanded={isUserMenuOpen}
-                  >
-                    <div className="action-icon">
-                      <FontAwesomeIcon icon={faUser} />
-                    </div>
-                    <span className="user-name desktop-only">
-                      {decoded_token?.username || decoded_token?.email}
-                    </span>
-                  </button>
-
-                  {isUserMenuOpen && (
-                    <Card variant="glass" className="user-dropdown">
-                      <div className="dropdown-content">
-                        <Link
-                          to="/profile"
-                          className="dropdown-link"
-                          onClick={closeMenus}
-                        >
-                          <FontAwesomeIcon icon={faUser} />
-                          <span>Profile</span>
-                        </Link>
-                        <Link
-                          to="/orders"
-                          className="dropdown-link"
-                          onClick={closeMenus}
-                        >
-                          <FontAwesomeIcon icon={faTruck} />
-                          <span>Orders</span>
-                        </Link>
-                        <Link
-                          to="/wishlist"
-                          className="dropdown-link"
-                          onClick={closeMenus}
-                        >
-                          <FontAwesomeIcon icon={faHeart} />
-                          <span>Wishlist</span>
-                        </Link>
-                        <div className="dropdown-divider"></div>
-                        <button
-                          className="dropdown-link logout-btn"
-                          onClick={handleLogout}
-                        >
-                          <FontAwesomeIcon icon={faSignOutAlt} />
-                          <span>Logout</span>
-                        </button>
+                {/* User Menu */}
+                {isAuthenticated ? (
+                  <div className="user-menu-container">
+                    <button
+                      className="user-menu-trigger"
+                      onClick={toggleUserMenu}
+                      aria-expanded={isUserMenuOpen}
+                    >
+                      <div className="action-icon">
+                        <FontAwesomeIcon icon={faUser} />
                       </div>
-                    </Card>
-                  )}
-                </div>
-              ) : (
-                <div className="auth-buttons">
-                  <Button
-                    as={Link}
-                    to="/login"
-                    variant="ghost"
-                    size="sm"
-                    className="login-btn"
-                    icon={<FontAwesomeIcon icon={faSignInAlt} />}
-                    onClick={closeMenus}
-                  >
-                    <span className="desktop-only">Login</span>
-                  </Button>
-                  <Button
-                    as={Link}
-                    to="/register"
-                    variant="primary"
-                    size="sm"
-                    className="register-btn"
-                    icon={<FontAwesomeIcon icon={faUserPlus} />}
-                    onClick={closeMenus}
-                  >
-                    <span className="desktop-only">Register</span>
-                  </Button>
-                </div>
-              )}
+                      <span className="user-name desktop-only">
+                        {decoded_token?.username || decoded_token?.email}
+                      </span>
+                    </button>
 
-              {/* Mobile Menu Toggle */}
-              <button
-                className="mobile-menu-toggle mobile-only"
-                onClick={toggleMenu}
-                aria-expanded={isMenuOpen}
-                aria-label="Toggle navigation menu"
-              >
-                <FontAwesomeIcon icon={isMenuOpen ? faTimes : faBars} />
-              </button>
+                    {isUserMenuOpen && (
+                      <Card variant="glass" className="user-dropdown">
+                        <div className="dropdown-content">
+                          <Link
+                            to="/profile"
+                            className="dropdown-link"
+                            onClick={closeMenus}
+                          >
+                            <FontAwesomeIcon icon={faUser} />
+                            <span>Profile</span>
+                          </Link>
+                          <Link
+                            to="/orders"
+                            className="dropdown-link"
+                            onClick={closeMenus}
+                          >
+                            <FontAwesomeIcon icon={faTruck} />
+                            <span>Orders</span>
+                          </Link>
+                          <Link
+                            to="/wishlist"
+                            className="dropdown-link"
+                            onClick={closeMenus}
+                          >
+                            <FontAwesomeIcon icon={faHeart} />
+                            <span>Wishlist</span>
+                          </Link>
+                          <div className="dropdown-divider"></div>
+                          <button
+                            className="dropdown-link logout-btn"
+                            onClick={handleLogout}
+                          >
+                            <FontAwesomeIcon icon={faSignOutAlt} />
+                            <span>Logout</span>
+                          </button>
+                        </div>
+                      </Card>
+                    )}
+                  </div>
+                ) : (
+                  <div className="auth-buttons">
+                    <Button
+                      as={Link}
+                      to="/login"
+                      variant="ghost"
+                      size="sm"
+                      className="login-btn"
+                      icon={<FontAwesomeIcon icon={faSignInAlt} />}
+                      onClick={closeMenus}
+                    >
+                      <span className="desktop-only">Login</span>
+                    </Button>
+                    <Button
+                      as={Link}
+                      to="/register"
+                      variant="primary"
+                      size="sm"
+                      className="register-btn"
+                      icon={<FontAwesomeIcon icon={faUserPlus} />}
+                      onClick={closeMenus}
+                    >
+                      <span className="desktop-only">Register</span>
+                    </Button>
+                  </div>
+                )}
+
+                {/* Mobile Menu Toggle */}
+                <button
+                  className="mobile-menu-toggle mobile-only"
+                  onClick={toggleMenu}
+                  aria-expanded={isMenuOpen}
+                  aria-label="Toggle navigation menu"
+                >
+                  <FontAwesomeIcon icon={isMenuOpen ? faTimes : faBars} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* Tier 3: Category Navigation */}
+        <div className="category-navbar">
+          <div className="container">
+            <div className="category-content">
+              {/* Desktop Categories */}
+              <div className="category-nav desktop-nav">
+                {shopLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className="category-link"
+                    onClick={closeMenus}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Quick Actions */}
+              <div className="quick-actions desktop-nav">
+                {quickLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className="quick-link"
+                    onClick={closeMenus}
+                  >
+                    {link.icon && <FontAwesomeIcon icon={link.icon} />}
+                    <span>{link.label}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </nav>
-
-      {/* Tier 3: Category Navigation */}
-      <div className="category-navbar">
-        <div className="container">
-          <div className="category-content">
-            {/* Desktop Categories */}
-            <div className="category-nav desktop-nav">
-              {shopLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  className="category-link"
-                  onClick={closeMenus}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="quick-actions desktop-nav">
-              {quickLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  to={link.href}
-                  className="quick-link"
-                  onClick={closeMenus}
-                >
-                  {link.icon && <FontAwesomeIcon icon={link.icon} />}
-                  <span>{link.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
         {/* Mobile Navigation Menu */}
         {isMenuOpen && (
@@ -282,7 +282,7 @@ const Navbar: React.FC = () => {
                   </Link>
                 ))}
               </div>
-              
+
               {!isAuthenticated && (
                 <div className="mobile-auth-section">
                   <div className="mobile-auth-divider"></div>
