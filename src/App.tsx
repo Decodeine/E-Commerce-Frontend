@@ -114,7 +114,7 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
   useEffect(() => {
     // Setup axios interceptors for JWT token handling
     setupAxiosInterceptors();
-    
+
     // Check authentication state on app load
     authCheckState();
   }, [authCheckState]);
@@ -124,7 +124,7 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
       <Elements stripe={stripePromise}>
         <ScrollToTop>
           <Navbar />
-          <Container className="content my-4">
+          <Container className="content" style={{ paddingTop: '1rem' }}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductList />} />

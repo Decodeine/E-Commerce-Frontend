@@ -54,7 +54,7 @@ const SearchForm: React.FC = () => {
             </button>
           )}
         </div>
-        
+
         <Button
           type="submit"
           variant="primary"
@@ -65,7 +65,7 @@ const SearchForm: React.FC = () => {
           Search
         </Button>
       </div>
-      
+
       {/* Search suggestions could be added here in the future */}
       {isFocused && query && (
         <div className="search-suggestions">

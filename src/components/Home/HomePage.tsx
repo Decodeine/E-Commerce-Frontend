@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faArrowRight, 
-  faShippingFast, 
-  faUndo, 
-  faShieldAlt, 
+import {
+  faArrowRight,
+  faShippingFast,
+  faUndo,
+  faShieldAlt,
   faHeadset,
   faStar,
   faHeart,
@@ -21,19 +21,11 @@ import FeaturedProducts from '../Products/FeaturedProducts';
 import Newsletter from '../Misc/Newsletter';
 import { fetchCategories } from '../../store/actions/storeActions';
 import { AppDispatch } from '../../store/store';
+import { productsApi } from '../../services/productsApi';
 import './css/HomePage.css';
 
-interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-  sale_price?: number;
-  image?: string;
-  rating?: number;
-  reviews_count?: number;
-  in_stock?: boolean;
-}
+// Use the Product type from productsApi
+import type { Product } from '../../services/productsApi';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,43 +38,20 @@ const HomePage: React.FC = () => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  // Mock featured hero products - replace with real API call
+  // Fetch featured hero products from API
   useEffect(() => {
-    const mockHeroProducts: Product[] = [
-      {
-        id: 1,
-        name: "iPhone 15 Pro Max",
-        slug: "iphone-15-pro-max",
-        price: 1199,
-        sale_price: 999,
-        image: "/images/iphone-15-pro.jpg",
-        rating: 4.8,
-        reviews_count: 2847,
-        in_stock: true
-      },
-      {
-        id: 2,
-        name: "Samsung Galaxy S24 Ultra",
-        slug: "samsung-galaxy-s24-ultra",
-        price: 1299,
-        image: "/images/samsung-s24.jpg",
-        rating: 4.7,
-        reviews_count: 1923,
-        in_stock: true
-      },
-      {
-        id: 3,
-        name: "MacBook Pro M3",
-        slug: "macbook-pro-m3",
-        price: 1999,
-        sale_price: 1799,
-        image: "/images/macbook-pro-m3.jpg",
-        rating: 4.9,
-        reviews_count: 1456,
-        in_stock: true
-      }
-    ];
-    setHeroProducts(mockHeroProducts);
+    setIsLoading(true);
+    productsApi.getFeaturedProducts()
+      .then((products) => {
+        setHeroProducts(products);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch featured products:', error);
+        setHeroProducts([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const featuredCategories = [
@@ -97,7 +66,7 @@ const HomePage: React.FC = () => {
     {
       id: 2,
       name: "Laptops",
-      slug: "laptops", 
+      slug: "laptops",
       image: "/images/categories/laptops.jpg",
       productCount: 89,
       color: "#764ba2"
@@ -106,7 +75,7 @@ const HomePage: React.FC = () => {
       id: 3,
       name: "Audio & Headphones",
       slug: "audio",
-      image: "/images/categories/audio.jpg", 
+      image: "/images/categories/audio.jpg",
       productCount: 234,
       color: "#f093fb"
     },
@@ -129,7 +98,7 @@ const HomePage: React.FC = () => {
     },
     {
       icon: faUndo,
-      title: "Easy Returns", 
+      title: "Easy Returns",
       description: "30-day hassle-free returns",
       color: "#2196F3"
     },
@@ -171,7 +140,7 @@ const HomePage: React.FC = () => {
               <span className="gradient-text"> Tech Products</span>
             </h1>
             <p className="hero-description">
-              Shop the latest smartphones, laptops, and gadgets with unbeatable prices 
+              Shop the latest smartphones, laptops, and gadgets with unbeatable prices
               and fast, free shipping on orders over $50.
             </p>
             <div className="hero-actions">
@@ -213,18 +182,31 @@ const HomePage: React.FC = () => {
           </div>
           <div className="hero-visual">
             <div className="hero-products-showcase">
-              {heroProducts.slice(0, 3).map((product, index) => (
-                <div 
-                  key={product.id} 
-                  className={`hero-product-card hero-product-${index + 1}`}
-                  style={{ '--delay': `${index * 0.2}s` } as React.CSSProperties}
-                >
-                  <ProductCard 
-                    product={product}
-                    isInWishlist={false}
-                  />
-                </div>
-              ))}
+              {isLoading ? (
+                <div className="hero-loading">Loading featured products...</div>
+              ) : heroProducts.length === 0 ? (
+                <div className="hero-no-products">No featured products found. Please add products in the admin panel.</div>
+              ) : heroProducts.slice(0, 3).map((product, index) => {
+                // Convert price fields to number for ProductCard compatibility
+                const fixedProduct = {
+                  ...product,
+                  price: Number(product.price),
+                  original_price: product.original_price ? Number(product.original_price) : undefined,
+                  rating: product.rating ? Number(product.rating) : 0,
+                };
+                return (
+                  <div
+                    key={product.id}
+                    className={`hero-product-card hero-product-${index + 1}`}
+                    style={{ '--delay': `${index * 0.2}s` } as React.CSSProperties}
+                  >
+                    <ProductCard
+                      product={fixedProduct}
+                      isInWishlist={false}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -238,7 +220,7 @@ const HomePage: React.FC = () => {
         </div>
         <div className="categories-grid">
           {featuredCategories.map((category) => (
-            <Card 
+            <Card
               key={category.id}
               variant="glass"
               className="category-card"
@@ -246,8 +228,8 @@ const HomePage: React.FC = () => {
               style={{ '--category-color': category.color } as React.CSSProperties}
             >
               <div className="category-image">
-                <img 
-                  src={category.image || '/images/placeholder-category.jpg'} 
+                <img
+                  src={category.image || '/images/placeholder-category.jpg'}
                   alt={category.name}
                   loading="lazy"
                 />
@@ -288,10 +270,6 @@ const HomePage: React.FC = () => {
 
       {/* Featured Products */}
       <section className="featured-section">
-        <div className="section-header">
-          <h2 className="section-title">Featured Products</h2>
-          <p className="section-subtitle">Handpicked favorites just for you</p>
-        </div>
         <FeaturedProducts />
       </section>
 
@@ -303,7 +281,7 @@ const HomePage: React.FC = () => {
         </div>
         <div className="features-grid">
           {keyFeatures.map((feature, index) => (
-            <Card 
+            <Card
               key={index}
               variant="glass"
               className="feature-card"
@@ -331,10 +309,10 @@ const HomePage: React.FC = () => {
                 <p>Average Rating</p>
                 <div className="rating-stars">
                   {[...Array(5)].map((_, i) => (
-                    <FontAwesomeIcon 
-                      key={i} 
-                      icon={faStar} 
-                      className={i < 5 ? 'star-filled' : 'star-empty'} 
+                    <FontAwesomeIcon
+                      key={i}
+                      icon={faStar}
+                      className={i < 5 ? 'star-filled' : 'star-empty'}
                     />
                   ))}
                 </div>

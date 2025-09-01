@@ -1,12 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  addProductToCart,
-  removeProductFromCart
-} from "../../store/actions/storeActions";
 import ProductCard from "./ProductCard";
+import { addProductToCart } from "../../store/actions/storeActions";
+import { productsApi } from "../../services/productsApi";
 
-// Type definitions for the legacy product item structure
 interface ProductItem {
   id: string | number;
   slug: string;
@@ -27,6 +24,9 @@ interface ProductProps {
 const Product: React.FC<ProductProps> = ({ item }) => {
   const dispatch = useDispatch();
   const cart = useSelector((state: any) => state.store.cart);
+  const token = localStorage.getItem("authToken") || "";
+
+  const [isInWishlist, setIsInWishlist] = useState(false);
 
   // Check if product is in cart
   const inCart = () => {
@@ -34,9 +34,9 @@ const Product: React.FC<ProductProps> = ({ item }) => {
     return res ? res.quantity : 0;
   };
 
-  // Convert legacy item structure to modern product structure for ProductCard
+  // Convert legacy item structure
   const product = {
-    id: typeof item.id === 'string' ? parseInt(item.id) : item.id,
+    id: typeof item.id === "string" ? parseInt(item.id) : item.id,
     name: item.name,
     slug: item.slug,
     price: item.price,
@@ -44,16 +44,32 @@ const Product: React.FC<ProductProps> = ({ item }) => {
     image: item.picture,
     rating: item.rating,
     reviews_count: item.reviews_count,
-    in_stock: item.quantity > 0
+    in_stock: item.quantity > 0,
   };
+
+  useEffect(() => {
+    if (token) {
+      const checkWishlist = async () => {
+        const inWishlist = await productsApi.isProductInWishlist(product.id, token);
+        setIsInWishlist(inWishlist);
+      };
+      checkWishlist();
+    }
+  }, [product.id, token]);
 
   const handleAddToCart = (productId: number) => {
     dispatch(addProductToCart(item, 1));
   };
 
-  const handleToggleWishlist = (productId: number) => {
-    // TODO: Implement wishlist functionality when available
-    console.log('Wishlist toggle for product:', productId);
+  const handleToggleWishlist = async (productId: number) => {
+    if (!token) return;
+
+    try {
+      const result = await productsApi.toggleProductInWishlist(productId, token);
+      setIsInWishlist(result.added); // Update local state
+    } catch (err) {
+      console.error("Error toggling wishlist", err);
+    }
   };
 
   return (
@@ -61,7 +77,7 @@ const Product: React.FC<ProductProps> = ({ item }) => {
       product={product}
       onAddToCart={handleAddToCart}
       onToggleWishlist={handleToggleWishlist}
-      isInWishlist={false} // TODO: Implement wishlist state when available
+      isInWishlist={isInWishlist}
     />
   );
 };
