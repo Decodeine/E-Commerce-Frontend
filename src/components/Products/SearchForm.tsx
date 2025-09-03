@@ -30,7 +30,10 @@ const SearchForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="search-form">
-      <div className={`search-input-container ${isFocused ? 'search-input-container--focused' : ''}`}>
+      <div
+        className={`search-input-container ${isFocused ? "search-input-container--focused" : ""
+          }`}
+      >
         <div className="search-input-wrapper">
           <FontAwesomeIcon icon={faSearch} className="search-icon" />
           <input
@@ -42,6 +45,7 @@ const SearchForm: React.FC = () => {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className="search-input"
+            style={{ border: "none" }} // ✅ fixed here
           />
           {query && (
             <button

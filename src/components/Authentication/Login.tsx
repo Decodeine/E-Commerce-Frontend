@@ -2,20 +2,22 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faEnvelope, 
-  faLock, 
-  faEye, 
+import {
+  faEnvelope,
+  faLock,
+  faEye,
   faEyeSlash,
   faSignInAlt,
   faExclamationCircle,
-  faCheckCircle
+  faCheckCircle,
+  faUserCheck
 } from "@fortawesome/free-solid-svg-icons";
 import { authClearErrors, authLogin } from "../../store/actions/authActions";
 import { useToast } from "../UI/Toast/ToastProvider";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
+import SuccessModal from "./SuccessModal"; // Import the success modal
 import { validateEmail } from "../../services/accountsApi";
 import type { AppDispatch } from "../../store/store";
 import "./css/Login.css";
@@ -40,6 +42,7 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     dispatch(authClearErrors());
@@ -47,16 +50,10 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (token && !error) {
-      showToast({
-        type: 'success',
-        title: 'Welcome Back!',
-        message: 'You have successfully logged in.'
-      });
-      
-      const from = (location.state && (location.state as any).from?.pathname) || "/";
-      navigate(from, { replace: true });
+      // Show success modal instead of toast
+      setShowSuccessModal(true);
     }
-  }, [token, error, location.state, navigate, showToast]);
+  }, [token, error]);
 
   useEffect(() => {
     if (error) {
@@ -67,6 +64,14 @@ const Login: React.FC = () => {
       });
     }
   }, [error, showToast]);
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+
+    // Navigate after modal closes
+    const from = (location.state && (location.state as any).from?.pathname) || "/";
+    navigate(from, { replace: true });
+  };
 
   const validateField = (name: string, value: string) => {
     const newValidation = { ...validation };
@@ -104,12 +109,12 @@ const Login: React.FC = () => {
 
   const isFormValid = () => {
     return Object.values(validation).every(field => field.valid) &&
-           Object.values(form).every(value => value.trim() !== '');
+      Object.values(form).every(value => value.trim() !== '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid()) {
       showToast({
         type: 'error',
@@ -120,7 +125,7 @@ const Login: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await dispatch(authLogin(form.email, form.password));
     } catch (error) {
@@ -260,6 +265,18 @@ const Login: React.FC = () => {
           </form>
         </Card>
       </div>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title="Welcome Back!"
+        message="You have successfully signed in to your account. Redirecting you to the dashboard..."
+        icon={faUserCheck}
+        autoClose={true}
+        autoCloseDelay={2500}
+        confirmText="Continue to Dashboard"
+      />
     </div>
   );
 };

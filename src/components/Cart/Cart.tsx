@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
+import {
   faShoppingCart,
   faTrash,
   faHeart,
@@ -88,7 +88,7 @@ const Cart: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<Set<number>>(new Set());
   const [showSavedItems, setShowSavedItems] = useState(false);
-  
+
   // Calculation states
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [taxAmount, setTaxAmount] = useState<number>(0);
@@ -107,12 +107,12 @@ const Cart: React.FC = () => {
 
   const updateCalculations = async () => {
     if (!cartData) return;
-    
+
     try {
       const shipping = await calculateShipping();
       const tax = await calculateTax();
       const total = parseFloat(cartData.subtotal) + shipping + tax;
-      
+
       setShippingCost(shipping);
       setTaxAmount(tax);
       setTotalAmount(total);
@@ -153,11 +153,11 @@ const Cart: React.FC = () => {
 
     try {
       setUpdating(prev => new Set(prev).add(productId));
-      
+
       // Optimistic update
       setCartData(prevCart => {
         if (!prevCart) return prevCart;
-        
+
         const updatedItems = prevCart.items.map(item => {
           if (item.product.id === productId) {
             const unitPrice = parseFloat(item.unit_price);
@@ -169,11 +169,11 @@ const Cart: React.FC = () => {
           }
           return item;
         });
-        
-        const newSubtotal = updatedItems.reduce((sum, item) => 
+
+        const newSubtotal = updatedItems.reduce((sum, item) =>
           sum + parseFloat(item.total_price), 0
         );
-        
+
         return {
           ...prevCart,
           items: updatedItems,
@@ -184,7 +184,7 @@ const Cart: React.FC = () => {
 
       await cartApi.updateItemQuantity(productId, newQuantity);
       await fetchCartData(); // Refresh with server data
-      
+
     } catch (error: any) {
       await fetchCartData(); // Revert on error
       showToast({
@@ -205,7 +205,7 @@ const Cart: React.FC = () => {
     try {
       await cartApi.removeItem(productId);
       await fetchCartData();
-      
+
       showToast({
         type: 'success',
         title: 'Item Removed',
@@ -225,7 +225,7 @@ const Cart: React.FC = () => {
       await savedForLaterApi.saveItem(item.product.id.toString(), item.quantity);
       await removeItem(item.product.id);
       await fetchSavedItems();
-      
+
       showToast({
         type: 'success',
         title: 'Item Saved',
@@ -246,7 +246,7 @@ const Cart: React.FC = () => {
       await savedForLaterApi.removeSavedItem(savedItem.id.toString());
       await fetchCartData();
       await fetchSavedItems();
-      
+
       showToast({
         type: 'success',
         title: 'Item Added',
@@ -269,7 +269,7 @@ const Cart: React.FC = () => {
     try {
       await cartApi.clearCart();
       await fetchCartData();
-      
+
       showToast({
         type: 'success',
         title: 'Cart Cleared',
@@ -340,7 +340,7 @@ const Cart: React.FC = () => {
 
   const CartItemCard: React.FC<{ item: CartItem }> = ({ item }) => {
     const isUpdating = updating.has(item.product.id);
-    
+
     return (
       <Card className="cart-item-card" padding="lg">
         <div className="item-image">
@@ -351,35 +351,35 @@ const Cart: React.FC = () => {
             </div>
           )}
         </div>
-        
+
         <div className="item-details">
           <Link to={`/product/${item.product.slug}`} className="item-name">
             {item.product.name}
           </Link>
           <div className="item-brand">{item.product.brand.name}</div>
-          
+
           {parseFloat(item.savings) > 0 && (
             <div className="savings-badge">
               <FontAwesomeIcon icon={faTags} />
               Save {formatCurrency(item.savings)}
             </div>
           )}
-          
+
           <div className="item-price">
             <span className="current-price">{formatCurrency(item.unit_price)}</span>
           </div>
         </div>
-        
+
         <div className="item-controls">
           <div className="quantity-controls">
-            <button 
+            <button
               className="quantity-btn"
               onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
               disabled={isUpdating || item.quantity <= 1}
             >
               <FontAwesomeIcon icon={faMinus} />
             </button>
-            
+
             <div className="quantity-display">
               {isUpdating ? (
                 <FontAwesomeIcon icon={faRefresh} className="spinning" />
@@ -387,8 +387,8 @@ const Cart: React.FC = () => {
                 item.quantity
               )}
             </div>
-            
-            <button 
+
+            <button
               className="quantity-btn"
               onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
               disabled={isUpdating || !item.product.in_stock}
@@ -396,9 +396,9 @@ const Cart: React.FC = () => {
               <FontAwesomeIcon icon={faPlus} />
             </button>
           </div>
-          
+
           <div className="item-actions">
-            <button 
+            <button
               className="action-btn save-btn"
               onClick={() => saveForLater(item)}
               disabled={isUpdating}
@@ -406,8 +406,8 @@ const Cart: React.FC = () => {
               <FontAwesomeIcon icon={faHeart} />
               Save for Later
             </button>
-            
-            <button 
+
+            <button
               className="action-btn remove-btn"
               onClick={() => removeItem(item.product.id)}
               disabled={isUpdating}
@@ -417,7 +417,7 @@ const Cart: React.FC = () => {
             </button>
           </div>
         </div>
-        
+
         <div className="item-total">
           <div className="total-price">{formatCurrency(item.total_price)}</div>
           <div className="added-date">Added {new Date(item.added_at).toLocaleDateString()}</div>
@@ -432,7 +432,7 @@ const Cart: React.FC = () => {
         <div className="saved-item-image">
           <img src={item.product.picture} alt={item.product.name} />
         </div>
-        
+
         <div className="saved-item-details">
           <Link to={`/product/${item.product.slug}`} className="saved-item-name">
             {item.product.name}
@@ -440,7 +440,7 @@ const Cart: React.FC = () => {
           <div className="saved-item-brand">{item.product.brand.name}</div>
           <div className="saved-item-price">{formatCurrency(item.product.price)}</div>
         </div>
-        
+
         <div className="saved-item-actions">
           <Button
             variant="primary"
@@ -450,7 +450,7 @@ const Cart: React.FC = () => {
           >
             Move to Cart
           </Button>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -486,7 +486,7 @@ const Cart: React.FC = () => {
               </p>
             </div>
           </div>
-          
+
           {cartData && cartData.items.length > 0 && (
             <div className="header-actions">
               <Button
@@ -510,8 +510,8 @@ const Cart: React.FC = () => {
                 </div>
                 <h3>Your cart is empty</h3>
                 <p>Looks like you haven't added any items to your cart yet.</p>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant="primary"
                   onClick={() => navigate('/products')}
                   icon={faShoppingBag}
                 >
@@ -537,7 +537,7 @@ const Cart: React.FC = () => {
                       </div>
                     </div>
                     <div className="progress-bar">
-                      <div 
+                      <div
                         className="progress-fill"
                         style={{ width: `${(parseFloat(cartData.subtotal) / 50000) * 100}%` }}
                       />
@@ -552,14 +552,14 @@ const Cart: React.FC = () => {
               <div className="saved-items-section">
                 <div className="section-header">
                   <h3>Saved for Later ({savedItems.length})</h3>
-                  <button 
+                  <button
                     className="toggle-btn"
                     onClick={() => setShowSavedItems(!showSavedItems)}
                   >
                     <FontAwesomeIcon icon={showSavedItems ? faMinus : faPlus} />
                   </button>
                 </div>
-                
+
                 {showSavedItems && (
                   <div className="saved-items-list">
                     {savedItems.map(item => (
@@ -575,32 +575,32 @@ const Cart: React.FC = () => {
             <div className="cart-summary-section">
               <Card className="cart-summary" padding="lg">
                 <h3>Order Summary</h3>
-                
+
                 <div className="summary-breakdown">
                   <div className="summary-row">
                     <span>Subtotal ({cartData.total_items} items)</span>
                     <span>{formatCurrency(cartData.subtotal)}</span>
                   </div>
-                  
+
                   <div className="summary-row">
                     <span>Shipping</span>
                     <span>
                       {shippingCost === 0 ? 'FREE' : formatCurrency(shippingCost.toString())}
                     </span>
                   </div>
-                  
+
                   <div className="summary-row">
                     <span>Tax (7.5%)</span>
                     <span>{formatCurrency(taxAmount.toString())}</span>
                   </div>
-                  
+
                   {parseFloat(cartData.total_savings) > 0 && (
                     <div className="summary-row savings-row">
                       <span>Total Savings</span>
                       <span className="savings-amount">-{formatCurrency(cartData.total_savings)}</span>
                     </div>
                   )}
-                  
+
                   <div className="summary-row total-row">
                     <span>Total</span>
                     <span>{formatCurrency(calculateTotal().toString())}</span>

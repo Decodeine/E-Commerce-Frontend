@@ -27,6 +27,7 @@ import './css/HomePage.css';
 // Use the Product type from productsApi
 import type { Product } from '../../services/productsApi';
 
+
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -211,7 +212,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
-
       {/* Quick Category Navigation */}
       <section className="category-nav-section">
         <div className="section-header">
@@ -219,17 +219,50 @@ const HomePage: React.FC = () => {
           <p className="section-subtitle">Find exactly what you're looking for</p>
         </div>
         <div className="categories-grid">
-          {featuredCategories.map((category) => (
+          {[
+            {
+              id: 1,
+              name: "Smartphones",
+              slug: "smartphones",
+              image: "/smartphones.webp", // ✅ /public/smartphones.webp
+              productCount: 156,
+              color: "#667eea"
+            },
+            {
+              id: 2,
+              name: "Laptops",
+              slug: "laptops",
+              image: "/laptops.webp", // ✅ /public/laptops.webp
+              productCount: 89,
+              color: "#764ba2"
+            },
+            {
+              id: 3,
+              name: "Audio & Headphones",
+              slug: "audio",
+              image: "/audioheadphones.jpg", // ✅ /public/audioheadphones.jpg
+              productCount: 234,
+              color: "#f093fb"
+            },
+            {
+              id: 4,
+              name: "Gaming",
+              slug: "gaming",
+              image: "/gamings.webp", // ✅ /public/gamings.webp
+              productCount: 178,
+              color: "#4facfe"
+            }
+          ].map((category) => (
             <Card
               key={category.id}
               variant="glass"
               className="category-card"
               onClick={() => handleCategoryClick(category.slug)}
-              style={{ '--category-color': category.color } as React.CSSProperties}
+              style={{ "--category-color": category.color } as React.CSSProperties}
             >
               <div className="category-image">
                 <img
-                  src={category.image || '/images/placeholder-category.jpg'}
+                  src={category.image}
                   alt={category.name}
                   loading="lazy"
                 />

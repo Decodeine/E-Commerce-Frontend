@@ -5,6 +5,10 @@
   width: 100%;
 }
 
+input {
+  border: none;
+}
+
 .search-input-container {
   display: flex;
   align-items: center;
@@ -64,6 +68,7 @@
   letter-spacing: 0.01em;
   height: 100%;
   width: 100%;
+  border: none;
 }
 
 .search-input::placeholder {

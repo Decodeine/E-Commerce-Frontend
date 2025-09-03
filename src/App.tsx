@@ -75,6 +75,8 @@ import {
   faLinkedin,
   faPinterest,
 } from "@fortawesome/free-brands-svg-icons";
+import Orders from "./components/Orders/Orders";
+import Profile from "./components/Profiles/Profile";
 
 library.add(
   faFacebookF,
@@ -128,6 +130,17 @@ const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductList />} />
+              <Route path="/profile" element={
+                <PrivateRoute>
+                  <Profile />
+                </PrivateRoute>
+              } />
+              <Route path="/orders" element={
+                <PrivateRoute>
+                  <Orders />
+                </PrivateRoute>
+              } />
+
               <Route path="/category/:categorySlug" element={<CategoryProducts />} />
               <Route path="/category/:categorySlug/brands" element={<CategoryBrands />} />
               <Route path="/brand/:brandSlug" element={<BrandProducts />} />

@@ -2,21 +2,23 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faUser, 
-  faEnvelope, 
-  faLock, 
-  faEye, 
+import {
+  faUser,
+  faEnvelope,
+  faLock,
+  faEye,
   faEyeSlash,
   faCheckCircle,
   faExclamationCircle,
-  faUserPlus
+  faUserPlus,
+  faUserCheck
 } from "@fortawesome/free-solid-svg-icons";
 import { authClearErrors, authSignup } from "../../store/actions/authActions";
 import { useToast } from "../UI/Toast/ToastProvider";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
+import SuccessModal from "./SuccessModal"; // Import the success modal
 import { validateEmail, validatePassword } from "../../services/accountsApi";
 import type { AppDispatch } from "../../store/store";
 import "./css/Register.css";
@@ -75,6 +77,7 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     dispatch(authClearErrors());
@@ -82,14 +85,17 @@ const Register: React.FC = () => {
 
   useEffect(() => {
     if (token) {
-      showToast({
-        type: 'success',
-        title: 'Registration Successful!',
-        message: 'Welcome to our platform. Your account has been created successfully.'
-      });
-      navigate("/", { replace: true });
+      // Show success modal instead of toast
+      setShowSuccessModal(true);
     }
-  }, [token, navigate, showToast]);
+  }, [token]);
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+
+    // Navigate after modal closes
+    navigate("/", { replace: true });
+  };
 
   const validateField = (name: string, value: string) => {
     const newValidation = { ...validation };
@@ -127,22 +133,22 @@ const Register: React.FC = () => {
 
       case 'password1':
         if (!value) {
-          newValidation.password1 = { 
-            valid: false, 
-            message: 'Password is required', 
+          newValidation.password1 = {
+            valid: false,
+            message: 'Password is required',
             strength: { minLength: false, hasUpper: false, hasLower: false, hasNumber: false, hasSpecial: false }
           };
         } else {
           const passwordCheck = validatePassword(value);
           if (!passwordCheck.valid) {
-            newValidation.password1 = { 
-              valid: false, 
+            newValidation.password1 = {
+              valid: false,
               message: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
               strength: convertPasswordStrength(passwordCheck.strength)
             };
           } else {
-            newValidation.password1 = { 
-              valid: true, 
+            newValidation.password1 = {
+              valid: true,
               message: 'Strong password!',
               strength: convertPasswordStrength(passwordCheck.strength)
             };
@@ -172,12 +178,12 @@ const Register: React.FC = () => {
 
   const isFormValid = () => {
     return Object.values(validation).every(field => field.valid) &&
-           Object.values(form).every(value => value.trim() !== '');
+      Object.values(form).every(value => value.trim() !== '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid()) {
       showToast({
         type: 'error',
@@ -188,7 +194,7 @@ const Register: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await dispatch(authSignup(
         form.email,
@@ -225,8 +231,8 @@ const Register: React.FC = () => {
         <div className="password-requirements">
           {requirements.map(req => (
             <div key={req.key} className={`requirement ${req.met ? 'met' : 'unmet'}`}>
-              <FontAwesomeIcon 
-                icon={req.met ? faCheckCircle : faExclamationCircle} 
+              <FontAwesomeIcon
+                icon={req.met ? faCheckCircle : faExclamationCircle}
                 className={req.met ? 'text-success' : 'text-danger'}
               />
               <span>{req.label}</span>
@@ -399,9 +405,9 @@ const Register: React.FC = () => {
               <div className="server-error">
                 <FontAwesomeIcon icon={faExclamationCircle} />
                 <span>
-                  {error.response?.data?.detail || 
-                   error.response?.data?.non_field_errors?.[0] || 
-                   'Registration failed. Please try again.'}
+                  {error.response?.data?.detail ||
+                    error.response?.data?.non_field_errors?.[0] ||
+                    'Registration failed. Please try again.'}
                 </span>
               </div>
             )}
@@ -431,6 +437,18 @@ const Register: React.FC = () => {
           </form>
         </Card>
       </div>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title="Account Created Successfully!"
+        message={`Welcome to our platform, ${form.first_name}! Your account has been created and you're now ready to start shopping.`}
+        icon={faUserCheck}
+        autoClose={true}
+        autoCloseDelay={3000}
+        confirmText="Continue to Dashboard"
+      />
     </div>
   );
 };
