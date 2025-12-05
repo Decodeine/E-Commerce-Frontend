@@ -273,8 +273,30 @@ const AdminProducts: React.FC = () => {
           setEditingProduct(null);
         }}
         title={editingProduct ? 'Edit Product' : 'Create Product'}
+        size="lg"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowModal(false);
+                setEditingProduct(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="product-form"
+              variant="primary"
+              icon={<FontAwesomeIcon icon={faSave} />}
+            >
+              {editingProduct ? 'Update Product' : 'Create Product'}
+            </Button>
+          </div>
+        }
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" id="product-form">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">Product Name *</label>
             <input
@@ -366,25 +388,6 @@ const AdminProducts: React.FC = () => {
             <label htmlFor="featured" className="text-sm font-medium text-slate-700">
               Featured Product
             </label>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowModal(false);
-                setEditingProduct(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              icon={<FontAwesomeIcon icon={faSave} />}
-            >
-              {editingProduct ? 'Update' : 'Create'}
-            </Button>
           </div>
         </form>
       </Modal>

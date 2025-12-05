@@ -420,44 +420,45 @@ const AdminSwaps: React.FC = () => {
                 </p>
               </div>
             )}
-
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowModal(false);
-                  setSelectedSwap(null);
-                }}
-              >
-                Close
-              </Button>
-              {selectedSwap.status === 'pending' && (
-                <>
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      setShowModal(false);
-                      setShowApproveModal(true);
-                    }}
-                    icon={<FontAwesomeIcon icon={faCheckCircle} />}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={() => {
-                      setShowModal(false);
-                      setShowRejectModal(true);
-                    }}
-                    icon={<FontAwesomeIcon icon={faTimesCircle} />}
-                  >
-                    Reject
-                  </Button>
-                </>
-              )}
-            </div>
           </div>
         )}
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowModal(false);
+                setSelectedSwap(null);
+              }}
+            >
+              Close
+            </Button>
+            {selectedSwap && selectedSwap.status === 'pending' && (
+              <>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    setShowModal(false);
+                    setShowApproveModal(true);
+                  }}
+                  icon={<FontAwesomeIcon icon={faCheckCircle} />}
+                >
+                  Approve
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    setShowModal(false);
+                    setShowRejectModal(true);
+                  }}
+                  icon={<FontAwesomeIcon icon={faTimesCircle} />}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
+          </div>
+        }
       </Modal>
 
       {/* Approve Modal */}
@@ -469,6 +470,7 @@ const AdminSwaps: React.FC = () => {
           setAdminNotes('');
         }}
         title="Approve Swap Request"
+        size="md"
       >
         <div className="space-y-4">
           <div>
@@ -531,6 +533,7 @@ const AdminSwaps: React.FC = () => {
           setRejectReason('');
         }}
         title="Reject Swap Request"
+        size="md"
       >
         <div className="space-y-4">
           <div>

@@ -219,7 +219,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   };
 
   const footer = (
-    <div className="modal-actions">
+    <div className="flex justify-end gap-3">
       <Button
         variant="outline"
         onClick={onClose}
@@ -244,9 +244,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       title={title}
       size="sm"
       footer={footer}
-      className={`confirm-modal confirm-modal--${type}`}
     >
-      <p className="confirm-modal__message">{message}</p>
+      <p className="text-slate-700">{message}</p>
     </Modal>
   );
 };
@@ -270,12 +269,19 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   buttonText = 'OK'
 }) => {
   const footer = (
-    <div className="modal-actions">
+    <div className="flex justify-end">
       <Button variant="primary" onClick={onClose}>
         {buttonText}
       </Button>
     </div>
   );
+
+  const typeColors = {
+    info: 'text-blue-600',
+    success: 'text-green-600',
+    warning: 'text-yellow-600',
+    error: 'text-red-600'
+  };
 
   return (
     <Modal
@@ -284,9 +290,8 @@ export const AlertModal: React.FC<AlertModalProps> = ({
       title={title}
       size="sm"
       footer={footer}
-      className={`alert-modal alert-modal--${type}`}
     >
-      <p className="alert-modal__message">{message}</p>
+      <p className={`text-slate-700 ${typeColors[type]}`}>{message}</p>
     </Modal>
   );
 };
