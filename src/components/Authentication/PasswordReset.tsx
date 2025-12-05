@@ -16,7 +16,6 @@ import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
 import { validateEmail, validatePassword, requestPasswordReset, confirmPasswordReset } from "../../services/accountsApi";
-import "./css/PasswordReset.css";
 
 interface PasswordResetFormData {
   email: string;
@@ -237,13 +236,13 @@ const PasswordReset: React.FC = () => {
     ];
 
     return (
-      <div className="password-strength">
-        <div className="password-requirements">
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="space-y-2">
           {requirements.map(req => (
-            <div key={req.key} className={`requirement ${req.met ? 'met' : 'unmet'}`}>
+            <div key={req.key} className={`flex items-center gap-2 text-sm ${req.met ? 'text-green-700' : 'text-slate-600'}`}>
               <FontAwesomeIcon 
                 icon={req.met ? faCheckCircle : faExclamationCircle} 
-                className={req.met ? 'text-success' : 'text-danger'}
+                className={req.met ? 'text-green-600' : 'text-slate-400'}
               />
               <span>{req.label}</span>
             </div>
@@ -257,7 +256,7 @@ const PasswordReset: React.FC = () => {
     const field = validation[fieldName];
     if (!field.valid && field.message) {
       return (
-        <div className="field-error">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border-l-4 border-red-500 bg-red-50 px-3 py-2 text-sm text-red-700">
           <FontAwesomeIcon icon={faExclamationCircle} />
           <span>{field.message}</span>
         </div>
@@ -265,7 +264,7 @@ const PasswordReset: React.FC = () => {
     }
     if (field.valid && field.message && fieldName !== 'new_password1') {
       return (
-        <div className="field-success">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border-l-4 border-green-500 bg-green-50 px-3 py-2 text-sm text-green-700">
           <FontAwesomeIcon icon={faCheckCircle} />
           <span>{field.message}</span>
         </div>
@@ -276,22 +275,25 @@ const PasswordReset: React.FC = () => {
 
   if (isSubmitting) {
     return (
-      <div className="password-reset-container">
+      <div className="flex min-h-screen items-center justify-center bg-blue-50 p-4">
         <Loading variant="spinner" size="lg" text={isConfirmMode ? "Resetting password..." : "Sending reset email..."} />
       </div>
     );
   }
 
   return (
-    <div className="password-reset-container">
-      <div className="password-reset-content">
-        <Card className="password-reset-card" padding="xl">
-          <div className="password-reset-header">
-            <div className="password-reset-icon">
-              <FontAwesomeIcon icon={isConfirmMode ? faLock : faKey} />
+    <div className="flex min-h-screen items-center justify-center bg-blue-50 p-4 py-8">
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="rounded-2xl border border-slate-200 bg-white shadow-md" padding="xl">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-500 shadow-md transition-transform hover:scale-110 hover:shadow-lg">
+              <FontAwesomeIcon icon={isConfirmMode ? faLock : faKey} className="text-2xl text-white" />
             </div>
-            <h1>{isConfirmMode ? 'Set New Password' : 'Reset Password'}</h1>
-            <p>
+            <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-3xl font-bold text-transparent">
+              {isConfirmMode ? 'Set New Password' : 'Reset Password'}
+            </h1>
+            <p className="text-slate-600">
               {isConfirmMode 
                 ? 'Enter your new password below' 
                 : isEmailSent 
@@ -302,11 +304,11 @@ const PasswordReset: React.FC = () => {
           </div>
 
           {!isConfirmMode && !isEmailSent && (
-            <form onSubmit={handleResetSubmit} className="password-reset-form">
+            <form onSubmit={handleResetSubmit} className="flex flex-col gap-6">
               {/* Email Field */}
-              <div className="form-group">
-                <label htmlFor="email">
-                  <FontAwesomeIcon icon={faEnvelope} />
+              <div className="flex flex-col">
+                <label htmlFor="email" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FontAwesomeIcon icon={faEnvelope} className="text-blue-600" />
                   Email Address
                 </label>
                 <input
@@ -315,7 +317,15 @@ const PasswordReset: React.FC = () => {
                   type="email"
                   value={resetForm.email}
                   onChange={handleResetFormChange}
-                  className={`form-input ${!validation.email.valid ? 'error' : validation.email.valid && resetForm.email ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.email.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.email.valid && resetForm.email 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Enter your email address"
                   required
                 />
@@ -330,14 +340,17 @@ const PasswordReset: React.FC = () => {
                 fullWidth
                 disabled={!isResetFormValid() || isSubmitting}
                 icon={faKey}
-                className="password-reset-submit"
+                className="mt-2"
               >
                 Send Reset Email
               </Button>
 
               {/* Back to Login */}
-              <div className="password-reset-footer">
-                <Link to="/login" className="back-to-login">
+              <div className="mt-6 border-t border-slate-200 pt-6 text-center">
+                <Link 
+                  to="/login" 
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline"
+                >
                   <FontAwesomeIcon icon={faArrowLeft} />
                   Back to Login
                 </Link>
@@ -346,28 +359,33 @@ const PasswordReset: React.FC = () => {
           )}
 
           {!isConfirmMode && isEmailSent && (
-            <div className="email-sent-content">
-              <div className="email-sent-icon">
-                <FontAwesomeIcon icon={faCheckCircle} />
+            <div className="flex flex-col items-center gap-6 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg">
+                <FontAwesomeIcon icon={faCheckCircle} className="text-3xl text-white" />
               </div>
-              <h3>Email Sent!</h3>
-              <p>
-                We've sent password reset instructions to <strong>{resetForm.email}</strong>
-              </p>
-              <p className="email-instruction">
-                Click the link in the email to reset your password. 
-                The link will expire in 24 hours.
-              </p>
+              <div>
+                <h3 className="mb-2 text-2xl font-bold text-slate-900">Email Sent!</h3>
+                <p className="text-slate-600">
+                  We've sent password reset instructions to <strong className="text-slate-900">{resetForm.email}</strong>
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Click the link in the email to reset your password. 
+                  The link will expire in 24 hours.
+                </p>
+              </div>
               
-              <div className="email-sent-actions">
+              <div className="flex w-full flex-col gap-3">
                 <Button
                   variant="secondary"
                   onClick={() => setIsEmailSent(false)}
-                  className="resend-button"
+                  fullWidth
                 >
                   Send Another Email
                 </Button>
-                <Link to="/login" className="back-to-login">
+                <Link 
+                  to="/login" 
+                  className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline"
+                >
                   <FontAwesomeIcon icon={faArrowLeft} />
                   Back to Login
                 </Link>
@@ -376,27 +394,35 @@ const PasswordReset: React.FC = () => {
           )}
 
           {isConfirmMode && (
-            <form onSubmit={handleConfirmSubmit} className="password-reset-form">
+            <form onSubmit={handleConfirmSubmit} className="flex flex-col gap-6">
               {/* New Password Field */}
-              <div className="form-group">
-                <label htmlFor="new_password1">
-                  <FontAwesomeIcon icon={faLock} />
+              <div className="flex flex-col">
+                <label htmlFor="new_password1" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FontAwesomeIcon icon={faLock} className="text-blue-600" />
                   New Password
                 </label>
-                <div className="password-input-wrapper">
+                <div className="relative">
                   <input
                     id="new_password1"
                     name="new_password1"
                     type={showPassword ? "text" : "password"}
                     value={confirmForm.new_password1}
                     onChange={handleConfirmFormChange}
-                    className={`form-input ${!validation.new_password1.valid ? 'error' : validation.new_password1.valid && confirmForm.new_password1 ? 'success' : ''}`}
+                    className={`
+                      w-full rounded-lg border px-4 py-3 pr-12 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                      ${!validation.new_password1.valid 
+                        ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                        : validation.new_password1.valid && confirmForm.new_password1 
+                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                          : 'border-slate-300 bg-white'
+                      }
+                    `}
                     placeholder="Enter your new password"
                     required
                   />
                   <button
                     type="button"
-                    className="password-toggle"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
@@ -407,25 +433,33 @@ const PasswordReset: React.FC = () => {
               </div>
 
               {/* Confirm New Password Field */}
-              <div className="form-group">
-                <label htmlFor="new_password2">
-                  <FontAwesomeIcon icon={faLock} />
+              <div className="flex flex-col">
+                <label htmlFor="new_password2" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FontAwesomeIcon icon={faLock} className="text-blue-600" />
                   Confirm New Password
                 </label>
-                <div className="password-input-wrapper">
+                <div className="relative">
                   <input
                     id="new_password2"
                     name="new_password2"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmForm.new_password2}
                     onChange={handleConfirmFormChange}
-                    className={`form-input ${!validation.new_password2.valid ? 'error' : validation.new_password2.valid && confirmForm.new_password2 ? 'success' : ''}`}
+                    className={`
+                      w-full rounded-lg border px-4 py-3 pr-12 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                      ${!validation.new_password2.valid 
+                        ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                        : validation.new_password2.valid && confirmForm.new_password2 
+                          ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                          : 'border-slate-300 bg-white'
+                      }
+                    `}
                     placeholder="Confirm your new password"
                     required
                   />
                   <button
                     type="button"
-                    className="password-toggle"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
@@ -442,14 +476,17 @@ const PasswordReset: React.FC = () => {
                 fullWidth
                 disabled={!isConfirmFormValid() || isSubmitting}
                 icon={faLock}
-                className="password-reset-submit"
+                className="mt-2"
               >
                 Update Password
               </Button>
 
               {/* Back to Login */}
-              <div className="password-reset-footer">
-                <Link to="/login" className="back-to-login">
+              <div className="mt-6 border-t border-slate-200 pt-6 text-center">
+                <Link 
+                  to="/login" 
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline"
+                >
                   <FontAwesomeIcon icon={faArrowLeft} />
                   Back to Login
                 </Link>

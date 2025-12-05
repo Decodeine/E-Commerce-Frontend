@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faHome, faPlus, faEdit, faTrash, faStar, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 import { accountsApi } from "../../services/accountsApi";
 import { showToast } from "../../store/actions/storeActions";
 import Modal from "../UI/Modal/Modal";
 import Button from "../UI/Button/Button";
+import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
 
 interface UserAddress {
@@ -281,90 +284,125 @@ const AddressManager: React.FC = () => {
 
   const getFieldClass = (fieldName: string) => {
     const hasError = errors[fieldName];
-    const isValid = formData[fieldName as keyof AddressFormData] && !hasError;
-    return `form-input ${hasError ? 'error' : ''} ${isValid ? 'success' : ''}`;
+    const baseClass = "w-full rounded-lg border px-4 py-2 text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600/20";
+    if (hasError) {
+      return `${baseClass} border-red-300 focus:border-red-500`;
+    }
+    if (formData[fieldName as keyof AddressFormData] && !hasError) {
+      return `${baseClass} border-green-300 focus:border-green-500`;
+    }
+    return `${baseClass} border-slate-300 focus:border-blue-600`;
   };
 
   const getAddressTypeLabel = (type: string) => {
     switch (type) {
-      case 'shipping': return '📦 Shipping';
-      case 'billing': return '💳 Billing';
-      case 'both': return '📦💳 Both';
+      case 'shipping': return 'Shipping';
+      case 'billing': return 'Billing';
+      case 'both': return 'Both';
       default: return type;
     }
   };
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <Loading />
-        <p>Loading addresses...</p>
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <Loading variant="spinner" size="lg" />
+          <p className="mt-4 text-slate-600">Loading addresses...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h2 className="section-title">Address Book</h2>
-        <Button variant="primary" onClick={handleAddNew}>
-          ➕ Add New Address
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Address Book</h2>
+          <p className="mt-1 text-slate-600">Manage your delivery and billing addresses</p>
+        </div>
+        <Button variant="primary" onClick={handleAddNew} icon={<FontAwesomeIcon icon={faPlus} />}>
+          Add New Address
         </Button>
       </div>
 
-      <div className="address-grid">
-        {addresses.map((address) => (
-          <div key={address.id} className={`address-card ${address.is_default ? 'default' : ''}`}>
-            <div className="address-type">
-              {getAddressTypeLabel(address.type)}
-              {address.is_default && <span className="default-badge">Default</span>}
-            </div>
-            
-            <div className="address-details">
-              <strong>{address.full_name}</strong><br />
-              {address.company && <>{address.company}<br /></>}
-              {address.address_line_1}<br />
-              {address.address_line_2 && <>{address.address_line_2}<br /></>}
-              {address.city}, {address.state} {address.postal_code}<br />
-              {countries.find(c => c.code === address.country)?.name || address.country}<br />
-              {address.phone_number && <>{address.phone_number}<br /></>}
-            </div>
-            
-            <div className="address-actions">
-              <button
-                className="btn-link"
-                onClick={() => handleEdit(address)}
-              >
-                ✏️ Edit
-              </button>
+      {addresses.length === 0 ? (
+        <Card className="p-12 text-center">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-50">
+            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-4xl text-blue-600" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold text-slate-900">No Addresses Yet</h3>
+          <p className="mb-6 text-slate-600">Start by adding a shipping or billing address</p>
+          <Button variant="primary" onClick={handleAddNew} icon={<FontAwesomeIcon icon={faPlus} />}>
+            Add Your First Address
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {addresses.map((address) => (
+            <Card 
+              key={address.id} 
+              className={`p-6 transition-shadow hover:shadow-md ${
+                address.is_default ? 'border-2 border-blue-600' : 'border border-slate-200'
+              }`}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faHome} className="text-blue-600" />
+                  <span className="font-semibold text-slate-900">{getAddressTypeLabel(address.type)}</span>
+                </div>
+                {address.is_default && (
+                  <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                    <FontAwesomeIcon icon={faStar} className="text-xs" />
+                    Default
+                  </span>
+                )}
+              </div>
               
-              {!address.is_default && (
-                <button
-                  className="btn-link"
-                  onClick={() => handleSetDefault(address.id)}
+              <div className="mb-4 space-y-1 text-sm text-slate-700">
+                <p className="font-semibold text-slate-900">{address.full_name}</p>
+                {address.company && <p>{address.company}</p>}
+                <p>{address.address_line_1}</p>
+                {address.address_line_2 && <p>{address.address_line_2}</p>}
+                <p>{address.city}, {address.state} {address.postal_code}</p>
+                <p>{countries.find(c => c.code === address.country)?.name || address.country}</p>
+                {address.phone_number && <p className="mt-2">{address.phone_number}</p>}
+              </div>
+              
+              <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(address)}
+                  icon={<FontAwesomeIcon icon={faEdit} />}
                 >
-                  ⭐ Set Default
-                </button>
-              )}
-              
-              <button
-                className="btn-link danger"
-                onClick={() => handleDelete(address.id)}
-              >
-                🗑️ Delete
-              </button>
-            </div>
-          </div>
-        ))}
-
-        {addresses.length === 0 && (
-          <div className="add-new-card" onClick={handleAddNew}>
-            <div className="add-icon">➕</div>
-            <h4>Add Your First Address</h4>
-            <p>Start by adding a shipping or billing address</p>
-          </div>
-        )}
-      </div>
+                  Edit
+                </Button>
+                
+                {!address.is_default && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSetDefault(address.id)}
+                    icon={<FontAwesomeIcon icon={faStar} />}
+                  >
+                    Set Default
+                  </Button>
+                )}
+                
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDelete(address.id)}
+                  icon={<FontAwesomeIcon icon={faTrash} />}
+                >
+                  Delete
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Address Form Modal */}
       <Modal
@@ -372,15 +410,17 @@ const AddressManager: React.FC = () => {
         onClose={handleCloseModal}
         title={editingAddress ? 'Edit Address' : 'Add New Address'}
       >
-        <form onSubmit={handleSubmit} className="profile-form">
-          <div className="form-group">
-            <label htmlFor="type" className="form-label">Address Type *</label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="type" className="mb-2 block text-sm font-medium text-slate-700">
+              Address Type *
+            </label>
             <select
               id="type"
               name="type"
               value={formData.type}
               onChange={handleInputChange}
-              className="form-input"
+              className={getFieldClass('type')}
               required
             >
               <option value="shipping">Shipping Address</option>
@@ -389,9 +429,11 @@ const AddressManager: React.FC = () => {
             </select>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="full_name" className="form-label">Full Name *</label>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="full_name" className="mb-2 block text-sm font-medium text-slate-700">
+                Full Name *
+              </label>
               <input
                 type="text"
                 id="full_name"
@@ -401,24 +443,30 @@ const AddressManager: React.FC = () => {
                 className={getFieldClass('full_name')}
                 required
               />
-              {errors.full_name && <div className="field-error">{errors.full_name}</div>}
+              {errors.full_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.full_name}</p>
+              )}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="company" className="form-label">Company</label>
+            <div>
+              <label htmlFor="company" className="mb-2 block text-sm font-medium text-slate-700">
+                Company
+              </label>
               <input
                 type="text"
                 id="company"
                 name="company"
                 value={formData.company}
                 onChange={handleInputChange}
-                className="form-input"
+                className={getFieldClass('company')}
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="address_line_1" className="form-label">Street Address *</label>
+          <div>
+            <label htmlFor="address_line_1" className="mb-2 block text-sm font-medium text-slate-700">
+              Street Address *
+            </label>
             <input
               type="text"
               id="address_line_1"
@@ -428,24 +476,30 @@ const AddressManager: React.FC = () => {
               className={getFieldClass('address_line_1')}
               required
             />
-            {errors.address_line_1 && <div className="field-error">{errors.address_line_1}</div>}
+            {errors.address_line_1 && (
+              <p className="mt-1 text-sm text-red-600">{errors.address_line_1}</p>
+            )}
           </div>
 
-          <div className="form-group">
-            <label htmlFor="address_line_2" className="form-label">Apartment, suite, etc.</label>
+          <div>
+            <label htmlFor="address_line_2" className="mb-2 block text-sm font-medium text-slate-700">
+              Apartment, suite, etc.
+            </label>
             <input
               type="text"
               id="address_line_2"
               name="address_line_2"
               value={formData.address_line_2}
               onChange={handleInputChange}
-              className="form-input"
+              className={getFieldClass('address_line_2')}
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="city" className="form-label">City *</label>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="city" className="mb-2 block text-sm font-medium text-slate-700">
+                City *
+              </label>
               <input
                 type="text"
                 id="city"
@@ -455,11 +509,15 @@ const AddressManager: React.FC = () => {
                 className={getFieldClass('city')}
                 required
               />
-              {errors.city && <div className="field-error">{errors.city}</div>}
+              {errors.city && (
+                <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+              )}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="state" className="form-label">State/Province *</label>
+            <div>
+              <label htmlFor="state" className="mb-2 block text-sm font-medium text-slate-700">
+                State/Province *
+              </label>
               <input
                 type="text"
                 id="state"
@@ -469,13 +527,17 @@ const AddressManager: React.FC = () => {
                 className={getFieldClass('state')}
                 required
               />
-              {errors.state && <div className="field-error">{errors.state}</div>}
+              {errors.state && (
+                <p className="mt-1 text-sm text-red-600">{errors.state}</p>
+              )}
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="postal_code" className="form-label">Postal Code *</label>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="postal_code" className="mb-2 block text-sm font-medium text-slate-700">
+                Postal Code *
+              </label>
               <input
                 type="text"
                 id="postal_code"
@@ -485,17 +547,21 @@ const AddressManager: React.FC = () => {
                 className={getFieldClass('postal_code')}
                 required
               />
-              {errors.postal_code && <div className="field-error">{errors.postal_code}</div>}
+              {errors.postal_code && (
+                <p className="mt-1 text-sm text-red-600">{errors.postal_code}</p>
+              )}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="country" className="form-label">Country *</label>
+            <div>
+              <label htmlFor="country" className="mb-2 block text-sm font-medium text-slate-700">
+                Country *
+              </label>
               <select
                 id="country"
                 name="country"
                 value={formData.country}
                 onChange={handleInputChange}
-                className="form-input"
+                className={getFieldClass('country')}
                 required
               >
                 {countries.map(country => (
@@ -507,8 +573,10 @@ const AddressManager: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="phone_number" className="form-label">Phone Number</label>
+          <div>
+            <label htmlFor="phone_number" className="mb-2 block text-sm font-medium text-slate-700">
+              Phone Number
+            </label>
             <input
               type="tel"
               id="phone_number"
@@ -518,25 +586,29 @@ const AddressManager: React.FC = () => {
               className={getFieldClass('phone_number')}
               placeholder="+1 (555) 123-4567"
             />
-            {errors.phone_number && <div className="field-error">{errors.phone_number}</div>}
+            {errors.phone_number && (
+              <p className="mt-1 text-sm text-red-600">{errors.phone_number}</p>
+            )}
           </div>
 
-          <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                name="is_default"
-                checked={formData.is_default}
-                onChange={handleInputChange}
-              />
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="is_default"
+              name="is_default"
+              checked={formData.is_default}
+              onChange={handleInputChange}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="is_default" className="text-sm font-medium text-slate-700">
               Set as default address
             </label>
           </div>
 
-          <div className="form-actions">
+          <div className="flex justify-end gap-3">
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               onClick={handleCloseModal}
               disabled={submitting}
             >

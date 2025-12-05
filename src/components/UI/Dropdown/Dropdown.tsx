@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, ReactNode } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faCheck } from '@fortawesome/free-solid-svg-icons';
-import './Dropdown.css';
 
 export interface DropdownOption {
   value: string | number;

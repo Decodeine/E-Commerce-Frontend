@@ -132,7 +132,7 @@ const accountsApiInstance = axios.create({
 // Request interceptor to add auth token
 accountsApiInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -221,7 +221,7 @@ export const authApi = {
 
   // Get current user
   getCurrentUser: async (): Promise<User> => {
-    const response = await accountsApiInstance.get('auth/user/');
+    const response = await accountsApiInstance.get('api/users/me/');
     return response.data;
   }
 };

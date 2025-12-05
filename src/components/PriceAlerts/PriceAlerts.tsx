@@ -16,7 +16,6 @@ import Card from '../UI/Card/Card';
 import { useToast } from '../UI/Toast/ToastProvider';
 import { fetchPriceAlerts, createPriceAlert, deletePriceAlert } from '../../store/actions/storeActions';
 import type { AppDispatch } from '../../store/store';
-import './css/PriceAlerts.css';
 
 interface PriceAlert {
   id: number;

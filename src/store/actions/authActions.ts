@@ -20,6 +20,8 @@ export const authStart = () => ({
 export const authSuccess = (token: string, expirationDate: string | Date) => {
   localStorage.setItem("token", token);
   localStorage.setItem("expirationDate", expirationDate.toString());
+  // Keep a unified access token for services that expect accessToken
+  localStorage.setItem("accessToken", token);
   return {
     type: AUTH_SUCCESS,
     token

@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { accountsApi, UserPreferences as APIUserPreferences } from "../../services/accountsApi";
 import { showToast } from "../../store/actions/storeActions";
 import Button from "../UI/Button/Button";
+import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
 
 interface UserPreferences extends APIUserPreferences {
@@ -175,136 +176,148 @@ const UserPreferences: React.FC = () => {
     disabled?: boolean;
   }> = ({ checked, onChange, disabled = false }) => (
     <div 
-      className={`toggle-switch ${checked ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 ${
+        checked ? 'bg-blue-600' : 'bg-slate-300'
+      } ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
       onClick={!disabled ? onChange : undefined}
-      style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1 }}
     >
-      <div className="toggle-slider" />
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
     </div>
   );
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <Loading />
-        <p>Loading preferences...</p>
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <Loading variant="spinner" size="lg" />
+          <p className="mt-4 text-slate-600">Loading preferences...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h2 className="section-title">User Preferences</h2>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">User Preferences</h2>
+          <p className="mt-1 text-slate-600">Customize your shopping experience and account settings</p>
+        </div>
         {hasChanges && (
           <Button 
             variant="primary" 
             onClick={handleSavePreferences}
             disabled={saving}
           >
-            {saving ? <Loading size="sm" /> : '💾 Save Changes'}
+            {saving ? <Loading size="sm" /> : 'Save Changes'}
           </Button>
         )}
       </div>
 
       {/* Notification Preferences */}
-      <div className="settings-section">
-        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600 }}>
-          🔔 Notification Preferences
+      <Card className="p-6">
+        <h3 className="mb-6 text-xl font-semibold text-slate-900">
+          Notification Preferences
         </h3>
         
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Email Notifications</h4>
-            <p>Receive important updates and order confirmations via email</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Email Notifications</h4>
+              <p className="mt-1 text-sm text-slate-600">Receive important updates and order confirmations via email</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.email_notifications}
+              onChange={() => handleToggleChange('email_notifications')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.email_notifications}
-            onChange={() => handleToggleChange('email_notifications')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Order Updates</h4>
-            <p>Get notified about order status changes and shipping updates</p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Order Updates</h4>
+              <p className="mt-1 text-sm text-slate-600">Get notified about order status changes and shipping updates</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.order_updates}
+              onChange={() => handleToggleChange('order_updates')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.order_updates}
-            onChange={() => handleToggleChange('order_updates')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Security Alerts</h4>
-            <p>Receive notifications about account security and login activities</p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Security Alerts</h4>
+              <p className="mt-1 text-sm text-slate-600">Receive notifications about account security and login activities</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.security_alerts}
+              onChange={() => handleToggleChange('security_alerts')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.security_alerts}
-            onChange={() => handleToggleChange('security_alerts')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Push Notifications</h4>
-            <p>Receive push notifications on your device</p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Push Notifications</h4>
+              <p className="mt-1 text-sm text-slate-600">Receive push notifications on your device</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.push_notifications}
+              onChange={() => handleToggleChange('push_notifications')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.push_notifications}
-            onChange={() => handleToggleChange('push_notifications')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>SMS Notifications</h4>
-            <p>Receive text messages for urgent updates</p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">SMS Notifications</h4>
+              <p className="mt-1 text-sm text-slate-600">Receive text messages for urgent updates</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.sms_notifications}
+              onChange={() => handleToggleChange('sms_notifications')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.sms_notifications}
-            onChange={() => handleToggleChange('sms_notifications')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Newsletter Subscription</h4>
-            <p>Stay updated with our latest products and exclusive offers</p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Newsletter Subscription</h4>
+              <p className="mt-1 text-sm text-slate-600">Stay updated with our latest products and exclusive offers</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.newsletter_subscribed}
+              onChange={() => handleToggleChange('newsletter_subscribed')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.newsletter_subscribed}
-            onChange={() => handleToggleChange('newsletter_subscribed')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Marketing Emails</h4>
-            <p>Receive promotional emails and special discount offers</p>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Marketing Emails</h4>
+              <p className="mt-1 text-sm text-slate-600">Receive promotional emails and special discount offers</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.marketing_emails}
+              onChange={() => handleToggleChange('marketing_emails')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.marketing_emails}
-            onChange={() => handleToggleChange('marketing_emails')}
-          />
         </div>
-      </div>
+      </Card>
 
       {/* Shopping Preferences */}
-      <div className="settings-section">
-        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600 }}>
-          🛍️ Shopping Preferences
+      <Card className="p-6">
+        <h3 className="mb-6 text-xl font-semibold text-slate-900">
+          Shopping Preferences
         </h3>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label className="form-label">Currency</label>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Currency</label>
             <select
               name="currency"
               value={preferences.currency}
               onChange={handleInputChange}
-              className="form-input"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
             >
               {currencies.map(currency => (
                 <option key={currency.code} value={currency.code}>
@@ -314,13 +327,13 @@ const UserPreferences: React.FC = () => {
             </select>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Language</label>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Language</label>
             <select
               name="language"
               value={preferences.language}
               onChange={handleInputChange}
-              className="form-input"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
             >
               {languages.map(language => (
                 <option key={language.code} value={language.code}>
@@ -331,16 +344,16 @@ const UserPreferences: React.FC = () => {
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Budget Range</label>
-          <div className="form-row">
+        <div className="mt-6">
+          <label className="mb-2 block text-sm font-medium text-slate-700">Budget Range</label>
+          <div className="grid grid-cols-2 gap-4">
             <input
               type="number"
               name="budget_range_min"
               value={preferences.budget_range_min}
               onChange={handleInputChange}
               placeholder="Min amount"
-              className="form-input"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               min="0"
               step="10"
             />
@@ -350,159 +363,154 @@ const UserPreferences: React.FC = () => {
               value={preferences.budget_range_max}
               onChange={handleInputChange}
               placeholder="Max amount"
-              className="form-input"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               min="0"
               step="10"
             />
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Preferred Categories</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <div className="mt-6">
+          <label className="mb-2 block text-sm font-medium text-slate-700">Preferred Categories</label>
+          <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
             {availableCategories.map(category => (
               <label 
                 key={category}
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem', 
-                  cursor: 'pointer',
-                  padding: '0.5rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  backgroundColor: preferences.preferred_categories.includes(category) ? '#eff6ff' : 'white'
-                }}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 transition-colors ${
+                  preferences.preferred_categories.includes(category) 
+                    ? 'border-blue-600 bg-blue-50' 
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
               >
                 <input
                   type="checkbox"
                   checked={preferences.preferred_categories.includes(category)}
                   onChange={() => handleArrayChange('preferred_categories', category)}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
-                {category}
+                <span className="text-sm text-slate-700">{category}</span>
               </label>
             ))}
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Preferred Brands</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <div className="mt-6">
+          <label className="mb-2 block text-sm font-medium text-slate-700">Preferred Brands</label>
+          <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
             {availableBrands.map(brand => (
               <label 
                 key={brand}
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.5rem', 
-                  cursor: 'pointer',
-                  padding: '0.5rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  backgroundColor: preferences.preferred_brands.includes(brand) ? '#eff6ff' : 'white'
-                }}
+                className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 transition-colors ${
+                  preferences.preferred_brands.includes(brand) 
+                    ? 'border-blue-600 bg-blue-50' 
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
               >
                 <input
                   type="checkbox"
                   checked={preferences.preferred_brands.includes(brand)}
                   onChange={() => handleArrayChange('preferred_brands', brand)}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
-                {brand}
+                <span className="text-sm text-slate-700">{brand}</span>
               </label>
             ))}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Display & Accessibility */}
-      <div className="settings-section">
-        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600 }}>
-          🎨 Display & Accessibility
+      <Card className="p-6">
+        <h3 className="mb-6 text-xl font-semibold text-slate-900">
+          Display & Accessibility
         </h3>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Theme Preference</h4>
-            <p>Choose your preferred color scheme</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Theme Preference</h4>
+              <p className="mt-1 text-sm text-slate-600">Choose your preferred color scheme</p>
+            </div>
+            <select
+              name="theme"
+              value={preferences.theme}
+              onChange={handleInputChange}
+              className="min-w-[120px] rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+            >
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
           </div>
-          <select
-            name="theme"
-            value={preferences.theme}
-            onChange={handleInputChange}
-            className="form-input"
-            style={{ width: 'auto', minWidth: '120px' }}
-          >
-            <option value="light">☀️ Light</option>
-            <option value="dark">🌙 Dark</option>
-          </select>
-        </div>
 
-        <div className="form-group">
-          <label className="form-label">Timezone</label>
-          <input
-            type="text"
-            name="timezone"
-            value={preferences.timezone}
-            onChange={handleInputChange}
-            className="form-input"
-            placeholder="Your timezone"
-          />
-          <small style={{ color: '#64748b', fontSize: '0.875rem' }}>
-            Current timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
-          </small>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">Timezone</label>
+            <input
+              type="text"
+              name="timezone"
+              value={preferences.timezone}
+              onChange={handleInputChange}
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+              placeholder="Your timezone"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Current timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}
+            </p>
+          </div>
         </div>
-      </div>
+      </Card>
 
       {/* Privacy Settings */}
-      <div className="settings-section">
-        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600 }}>
-          🔒 Privacy Settings
+      <Card className="p-6">
+        <h3 className="mb-6 text-xl font-semibold text-slate-900">
+          Privacy Settings
         </h3>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Analytics & Performance</h4>
-            <p>Help us improve our service by sharing anonymous usage data</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Analytics & Performance</h4>
+              <p className="mt-1 text-sm text-slate-600">Help us improve our service by sharing anonymous usage data</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.privacy_analytics}
+              onChange={() => handleToggleChange('privacy_analytics')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.privacy_analytics}
-            onChange={() => handleToggleChange('privacy_analytics')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Personalization</h4>
-            <p>Allow us to personalize your shopping experience based on your preferences</p>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Personalization</h4>
+              <p className="mt-1 text-sm text-slate-600">Allow us to personalize your shopping experience based on your preferences</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.privacy_personalization}
+              onChange={() => handleToggleChange('privacy_personalization')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.privacy_personalization}
-            onChange={() => handleToggleChange('privacy_personalization')}
-          />
-        </div>
 
-        <div className="setting-item">
-          <div className="setting-info">
-            <h4>Third-party Sharing</h4>
-            <p>Allow sharing of anonymized data with trusted partners for better recommendations</p>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="font-medium text-slate-900">Third-party Sharing</h4>
+              <p className="mt-1 text-sm text-slate-600">Allow sharing of anonymized data with trusted partners for better recommendations</p>
+            </div>
+            <ToggleSwitch 
+              checked={preferences.privacy_third_party}
+              onChange={() => handleToggleChange('privacy_third_party')}
+            />
           </div>
-          <ToggleSwitch 
-            checked={preferences.privacy_third_party}
-            onChange={() => handleToggleChange('privacy_third_party')}
-          />
         </div>
-      </div>
+      </Card>
 
       {/* Save Button */}
       {hasChanges && (
-        <div className="form-actions" style={{ marginTop: '2rem', justifyContent: 'center' }}>
+        <div className="flex justify-center">
           <Button 
             variant="primary" 
             onClick={handleSavePreferences}
             disabled={saving}
-            style={{ minWidth: '200px' }}
+            className="min-w-[200px]"
           >
-            {saving ? <Loading size="sm" /> : '💾 Save All Preferences'}
+            {saving ? <Loading size="sm" /> : 'Save All Preferences'}
           </Button>
         </div>
       )}

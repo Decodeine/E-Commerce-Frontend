@@ -7,7 +7,6 @@ import {
     faUserCheck
 } from "@fortawesome/free-solid-svg-icons";
 import Button from "../UI/Button/Button";
-import "./css/SuccessModal.css";
 
 interface SuccessModalProps {
     isOpen: boolean;
@@ -73,11 +72,14 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="success-modal-overlay" onClick={handleBackdropClick}>
-            <div className="success-modal">
+        <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            onClick={handleBackdropClick}
+        >
+            <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-xl">
                 {showCloseButton && (
                     <button
-                        className="success-modal-close"
+                        className="absolute right-4 top-4 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                         onClick={onClose}
                         aria-label="Close modal"
                     >
@@ -85,31 +87,34 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
                     </button>
                 )}
 
-                <div className="success-modal-content">
-                    <div className="success-modal-icon">
-                        <FontAwesomeIcon icon={icon} />
+                <div className="flex flex-col items-center p-8 text-center">
+                    <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg">
+                        <FontAwesomeIcon icon={icon} className="text-3xl text-white" />
                     </div>
 
-                    <div className="success-modal-text">
-                        <h2>{title}</h2>
-                        <p>{message}</p>
+                    <div className="mb-6">
+                        <h2 className="mb-2 text-2xl font-bold text-slate-900">{title}</h2>
+                        <p className="text-slate-600">{message}</p>
                     </div>
 
                     {autoClose && (
-                        <div className="success-modal-progress">
+                        <div className="mb-6 h-1 w-full overflow-hidden rounded-full bg-slate-200">
                             <div
-                                className="progress-bar"
-                                style={{ animationDuration: `${autoCloseDelay}ms` }}
+                                className="h-full w-full bg-gradient-to-r from-blue-600 to-blue-500 animate-[shrink_linear_forwards]"
+                                style={{ 
+                                    animationDuration: `${autoCloseDelay}ms`
+                                }}
                             />
                         </div>
                     )}
 
-                    <div className="success-modal-actions">
+                    <div className="w-full">
                         <Button
                             variant="primary"
                             size="md"
                             onClick={handleConfirm}
                             icon={faSignInAlt}
+                            fullWidth
                         >
                             {confirmText}
                         </Button>

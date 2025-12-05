@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Row, Col, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import "./css/cart.css";
 
 interface CartItem {
   id: string | number;

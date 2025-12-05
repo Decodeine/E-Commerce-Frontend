@@ -12,7 +12,6 @@ import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
 import { createReview, updateReview } from '../../store/actions/storeActions';
 import type { AppDispatch } from '../../store/store';
-import './css/ReviewSubmission.css';
 
 interface ReviewSubmissionProps {
   productId: number;

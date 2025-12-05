@@ -8,7 +8,6 @@ import {
   faSearchPlus,
   faSearchMinus
 } from '@fortawesome/free-solid-svg-icons';
-import './css/ProductGallery.css';
 
 interface ProductGalleryProps {
   images: string[];

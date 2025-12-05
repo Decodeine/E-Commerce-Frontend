@@ -1,7 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faCircleNotch, faCog, faSync } from '@fortawesome/free-solid-svg-icons';
-import './Loading.css';
 
 export type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
 export type SpinnerType = 'default' | 'notch' | 'cog' | 'sync';

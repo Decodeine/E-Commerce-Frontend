@@ -13,7 +13,6 @@ import { useToast } from "../UI/Toast/ToastProvider";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
 import { validatePassword, changeUserPassword } from "../../services/accountsApi";
-import "./css/ChangePassword.css";
 
 interface ChangePasswordFormData {
   old_password: string;
@@ -188,13 +187,13 @@ const ChangePassword: React.FC = () => {
     ];
 
     return (
-      <div className="password-strength">
-        <div className="password-requirements">
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="space-y-2">
           {requirements.map(req => (
-            <div key={req.key} className={`requirement ${req.met ? 'met' : 'unmet'}`}>
+            <div key={req.key} className={`flex items-center gap-2 text-sm ${req.met ? 'text-green-700' : 'text-slate-600'}`}>
               <FontAwesomeIcon 
                 icon={req.met ? faCheckCircle : faExclamationCircle} 
-                className={req.met ? 'text-success' : 'text-danger'}
+                className={req.met ? 'text-green-600' : 'text-slate-400'}
               />
               <span>{req.label}</span>
             </div>
@@ -208,7 +207,7 @@ const ChangePassword: React.FC = () => {
     const field = validation[fieldName];
     if (!field.valid && field.message) {
       return (
-        <div className="field-error">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border-l-4 border-red-500 bg-red-50 px-3 py-2 text-sm text-red-700">
           <FontAwesomeIcon icon={faExclamationCircle} />
           <span>{field.message}</span>
         </div>
@@ -216,7 +215,7 @@ const ChangePassword: React.FC = () => {
     }
     if (field.valid && field.message && fieldName !== 'new_password1') {
       return (
-        <div className="field-success">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border-l-4 border-green-500 bg-green-50 px-3 py-2 text-sm text-green-700">
           <FontAwesomeIcon icon={faCheckCircle} />
           <span>{field.message}</span>
         </div>
@@ -226,38 +225,49 @@ const ChangePassword: React.FC = () => {
   };
 
   return (
-    <div className="change-password-container">
-      <div className="change-password-content">
-        <Card className="change-password-card" padding="xl">
-          <div className="change-password-header">
-            <div className="change-password-icon">
-              <FontAwesomeIcon icon={faKey} />
+    <div className="flex min-h-screen items-center justify-center bg-blue-50 p-4 py-8">
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="rounded-2xl border border-slate-200 bg-white shadow-md" padding="xl">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-500 shadow-md transition-transform hover:scale-110 hover:shadow-lg">
+              <FontAwesomeIcon icon={faKey} className="text-2xl text-white" />
             </div>
-            <h1>Change Password</h1>
-            <p>Update your password to keep your account secure</p>
+            <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-3xl font-bold text-transparent">
+              Change Password
+            </h1>
+            <p className="text-slate-600">Update your password to keep your account secure</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="change-password-form">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* Current Password Field */}
-            <div className="form-group">
-              <label htmlFor="old_password">
-                <FontAwesomeIcon icon={faLock} />
+            <div className="flex flex-col">
+              <label htmlFor="old_password" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <FontAwesomeIcon icon={faLock} className="text-blue-600" />
                 Current Password
               </label>
-              <div className="password-input-wrapper">
+              <div className="relative">
                 <input
                   id="old_password"
                   name="old_password"
                   type={showOldPassword ? "text" : "password"}
                   value={form.old_password}
                   onChange={handleChange}
-                  className={`form-input ${!validation.old_password.valid ? 'error' : validation.old_password.valid && form.old_password ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 pr-12 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.old_password.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.old_password.valid && form.old_password 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Enter your current password"
                   required
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                   onClick={() => setShowOldPassword(!showOldPassword)}
                 >
                   <FontAwesomeIcon icon={showOldPassword ? faEyeSlash : faEye} />
@@ -267,25 +277,33 @@ const ChangePassword: React.FC = () => {
             </div>
 
             {/* New Password Field */}
-            <div className="form-group">
-              <label htmlFor="new_password1">
-                <FontAwesomeIcon icon={faLock} />
+            <div className="flex flex-col">
+              <label htmlFor="new_password1" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <FontAwesomeIcon icon={faLock} className="text-blue-600" />
                 New Password
               </label>
-              <div className="password-input-wrapper">
+              <div className="relative">
                 <input
                   id="new_password1"
                   name="new_password1"
                   type={showNewPassword ? "text" : "password"}
                   value={form.new_password1}
                   onChange={handleChange}
-                  className={`form-input ${!validation.new_password1.valid ? 'error' : validation.new_password1.valid && form.new_password1 ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 pr-12 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.new_password1.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.new_password1.valid && form.new_password1 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Enter your new password"
                   required
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >
                   <FontAwesomeIcon icon={showNewPassword ? faEyeSlash : faEye} />
@@ -296,25 +314,33 @@ const ChangePassword: React.FC = () => {
             </div>
 
             {/* Confirm New Password Field */}
-            <div className="form-group">
-              <label htmlFor="new_password2">
-                <FontAwesomeIcon icon={faLock} />
+            <div className="flex flex-col">
+              <label htmlFor="new_password2" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <FontAwesomeIcon icon={faLock} className="text-blue-600" />
                 Confirm New Password
               </label>
-              <div className="password-input-wrapper">
+              <div className="relative">
                 <input
                   id="new_password2"
                   name="new_password2"
                   type={showConfirmPassword ? "text" : "password"}
                   value={form.new_password2}
                   onChange={handleChange}
-                  className={`form-input ${!validation.new_password2.valid ? 'error' : validation.new_password2.valid && form.new_password2 ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 pr-12 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.new_password2.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.new_password2.valid && form.new_password2 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Confirm your new password"
                   required
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
@@ -331,7 +357,7 @@ const ChangePassword: React.FC = () => {
               fullWidth
               disabled={!isFormValid() || isSubmitting}
               icon={faKey}
-              className="change-password-submit"
+              className="mt-2"
             >
               {isSubmitting ? 'Updating Password...' : 'Update Password'}
             </Button>
@@ -343,7 +369,6 @@ const ChangePassword: React.FC = () => {
               size="lg"
               fullWidth
               onClick={() => navigate('/profile')}
-              className="change-password-cancel"
             >
               Cancel
             </Button>

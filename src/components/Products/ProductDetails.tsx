@@ -23,29 +23,31 @@ import {
   faShare,
   faCodeCompare,
   faBell,
-  faTag
+  faTag,
+  faChevronRight
 } from "@fortawesome/free-solid-svg-icons";
 import Card from "../UI/Card/Card";
 import Button from "../UI/Button/Button";
 import { useToast } from "../UI/Toast/ToastProvider";
+import Loading from "../UI/Loading/Loading";
 import ProductGallery from "./ProductGallery";
 import FeaturedProducts from "./FeaturedProducts";
-import "./css/ProductDetails.css";
 
 // Types
 interface Product {
   id: string | number;
   slug: string;
   name: string;
-  price: number;
+  price: number | string;
   picture: string;
   description: string;
   quantity: number;
-  sale_price?: number;
-  rating?: number;
+  sale_price?: number | string;
+  original_price?: number | string;
+  rating?: number | string;
   reviews_count?: number;
-  brand?: string;
-  category?: string;
+  brand?: string | { name: string; id?: number };
+  category?: string | { id?: number; name?: string; slug?: string; parent?: any; icon?: string; description?: string; product_count?: number };
   gallery?: string[];
   variants?: {
     colors?: string[];
@@ -94,12 +96,14 @@ const ProductDetails: React.FC = () => {
         const res = await axios.get(`${API_PATH}products/${slug}`);
         setProduct(res.data);
         
-        // Fetch additional data
-        await Promise.all([
-          fetchProductReviews(res.data.id),
-          fetchRecommendations(res.data.id),
+        // Fetch additional data (don't await - let them fail silently)
+        Promise.all([
+          fetchProductReviews(res.data.slug),
+          fetchRecommendations(res.data.slug),
           fetchRelatedProducts(res.data.category, res.data.id)
-        ]);
+        ]).catch(() => {
+          // Silently handle any errors
+        });
       } catch (err) {
         setError(err);
       } finally {
@@ -110,27 +114,36 @@ const ProductDetails: React.FC = () => {
     fetchProduct();
   }, [slug]);
 
-  const fetchProductReviews = async (productId: string | number) => {
+  const fetchProductReviews = async (productSlug: string) => {
     try {
-      const res = await axios.get(`${API_PATH}products/${productId}/reviews/`);
-      setReviews(res.data.results || []);
-    } catch (err) {
-      console.error('Error fetching reviews:', err);
+      const res = await axios.get(`${API_PATH}products/${productSlug}/reviews/`);
+      setReviews(res.data.results || res.data || []);
+    } catch (err: any) {
+      // Silently fail - reviews endpoint may not exist
+      if (err?.response?.status !== 404) {
+        console.error('Error fetching reviews:', err);
+      }
     }
   };
 
-  const fetchRecommendations = async (productId: string | number) => {
+  const fetchRecommendations = async (productSlug: string) => {
     try {
-      const res = await axios.get(`${API_PATH}products/${productId}/recommendations/`);
-      setRecommendations(res.data.results || []);
-    } catch (err) {
-      console.error('Error fetching recommendations:', err);
+      const res = await axios.get(`${API_PATH}products/${productSlug}/recommendations/`);
+      setRecommendations(res.data.results || res.data || []);
+    } catch (err: any) {
+      // Silently fail - recommendations endpoint may not exist
+      if (err?.response?.status !== 404) {
+        console.error('Error fetching recommendations:', err);
+      }
     }
   };
 
-  const fetchRelatedProducts = async (category: string, currentProductId: string | number) => {
+  const fetchRelatedProducts = async (category: string | { name?: string; slug?: string } | undefined, currentProductId: string | number) => {
     try {
-      const res = await axios.get(`${API_PATH}products/?category=${category}&limit=8`);
+      const categorySlug = typeof category === 'object' ? category?.slug || category?.name : category;
+      if (!categorySlug) return;
+      
+      const res = await axios.get(`${API_PATH}products/?category=${categorySlug}&limit=8`);
       const filtered = res.data.results?.filter((p: Product) => p.id !== currentProductId) || [];
       setRelatedProducts(filtered.slice(0, 4));
     } catch (err) {
@@ -148,7 +161,6 @@ const ProductDetails: React.FC = () => {
     if (!product) return;
     
     if (isInWishlist()) {
-      // Find the wishlist item to get its ID for removal
       const wishlistItem = wishlist.find((item: any) => 
         item.product?.id === product.id || item.id === product.id
       );
@@ -196,7 +208,12 @@ const ProductDetails: React.FC = () => {
 
   const navigateToCategory = () => {
     if (product?.category) {
-      navigate(`/products?category=${encodeURIComponent(product.category)}`);
+      const categorySlug = typeof product.category === 'object' 
+        ? (product.category.slug || product.category.name) 
+        : product.category;
+      if (categorySlug) {
+        navigate(`/products?category=${encodeURIComponent(categorySlug)}`);
+      }
     }
   };
 
@@ -240,22 +257,26 @@ const ProductDetails: React.FC = () => {
     return Array.from({ length: maxQuantity }, (_, i) => i + 1);
   };
 
-  const renderStars = (rating: number) => {
+  const renderStars = (rating: number | string | undefined) => {
+    if (!rating) return null;
+    const numRating = typeof rating === 'string' ? parseFloat(rating) : rating;
+    if (isNaN(numRating)) return null;
+    
     const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
+    const fullStars = Math.floor(numRating);
+    const hasHalfStar = numRating % 1 !== 0;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<FontAwesomeIcon key={i} icon={faStar} className="star-filled" />);
+      stars.push(<FontAwesomeIcon key={i} icon={faStar} className="text-yellow-400" />);
     }
 
     if (hasHalfStar) {
-      stars.push(<FontAwesomeIcon key="half" icon={faStarHalfAlt} className="star-filled" />);
+      stars.push(<FontAwesomeIcon key="half" icon={faStarHalfAlt} className="text-yellow-400" />);
     }
 
-    const emptyStars = 5 - Math.ceil(rating);
+    const emptyStars = 5 - Math.ceil(numRating);
     for (let i = 0; i < emptyStars; i++) {
-      stars.push(<FontAwesomeIcon key={`empty-${i}`} icon={faStar} className="star-empty" />);
+      stars.push(<FontAwesomeIcon key={`empty-${i}`} icon={faStar} className="text-slate-300" />);
     }
 
     return stars;
@@ -271,15 +292,19 @@ const ProductDetails: React.FC = () => {
     if (!product?.variants) return null;
 
     return (
-      <div className="product-variants">
+      <div className="mb-6 space-y-4">
         {product.variants.colors && (
-          <div className="variant-group">
-            <label>Color:</label>
-            <div className="color-options">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Color:</label>
+            <div className="flex gap-2">
               {product.variants.colors.map(color => (
                 <button
                   key={color}
-                  className={`color-option ${selectedVariant.color === color ? 'selected' : ''}`}
+                  className={`h-10 w-10 rounded-full border-2 transition-all ${
+                    selectedVariant.color === color 
+                      ? 'border-blue-600 ring-2 ring-blue-200' 
+                      : 'border-slate-300 hover:border-slate-400'
+                  }`}
                   style={{ backgroundColor: color.toLowerCase() }}
                   onClick={() => setSelectedVariant(prev => ({ ...prev, color }))}
                   title={color}
@@ -290,13 +315,17 @@ const ProductDetails: React.FC = () => {
         )}
         
         {product.variants.sizes && (
-          <div className="variant-group">
-            <label>Size:</label>
-            <div className="size-options">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">Size:</label>
+            <div className="flex gap-2">
               {product.variants.sizes.map(size => (
                 <button
                   key={size}
-                  className={`size-option ${selectedVariant.size === size ? 'selected' : ''}`}
+                  className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-all ${
+                    selectedVariant.size === size
+                      ? 'border-blue-600 bg-blue-50 text-blue-600'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                  }`}
                   onClick={() => setSelectedVariant(prev => ({ ...prev, size }))}
                 >
                   {size}
@@ -313,13 +342,13 @@ const ProductDetails: React.FC = () => {
     if (!product?.specifications) return null;
 
     return (
-      <div className="product-specifications">
-        <h3>Specifications</h3>
-        <div className="specs-grid">
+      <div>
+        <h3 className="mb-4 text-xl font-bold text-slate-900">Specifications</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
           {Object.entries(product.specifications).map(([key, value]) => (
-            <div key={key} className="spec-item">
-              <span className="spec-label">{key}:</span>
-              <span className="spec-value">{value}</span>
+            <div key={key} className="flex justify-between border-b border-slate-200 pb-2">
+              <span className="font-medium text-slate-600">{key}:</span>
+              <span className="text-slate-900">{value}</span>
             </div>
           ))}
         </div>
@@ -331,24 +360,23 @@ const ProductDetails: React.FC = () => {
     if (!showReviews || reviews.length === 0) return null;
 
     return (
-      <div className="product-reviews">
-        <h3>Customer Reviews ({reviews.length})</h3>
-        <div className="reviews-list">
-          {reviews.slice(0, 5).map(review => (
-            <div key={review.id} className="review-item">
-              <div className="review-header">
-                <span className="reviewer-name">{review.user_name}</span>
-                <div className="review-rating">
+      <div className="mt-4 space-y-4">
+        {reviews.slice(0, 5).map(review => (
+          <div key={review.id} className="border-b border-slate-200 pb-4 last:border-0">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-semibold text-slate-900">{review.user_name}</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   {renderStars(review.rating)}
                 </div>
-                <span className="review-date">
+                <span className="text-sm text-slate-500">
                   {new Date(review.created_at).toLocaleDateString()}
                 </span>
               </div>
-              <p className="review-comment">{review.comment}</p>
             </div>
-          ))}
-        </div>
+            <p className="text-slate-700">{review.comment}</p>
+          </div>
+        ))}
         {reviews.length > 5 && (
           <Button variant="outline" size="sm">
             View All Reviews
@@ -360,366 +388,391 @@ const ProductDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="product-details-loading">
-        <div className="loading-spinner"></div>
-        <span className="loading-text">Loading product details...</span>
+      <div className="flex min-h-screen items-center justify-center py-12">
+        <Loading variant="spinner" size="lg" text="Loading product details..." />
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="product-details-error">
-        <Card className="error-card" padding="lg">
-          <h2>Product Not Found</h2>
-          <p>Sorry, we couldn't find the product you're looking for.</p>
-          <Button 
-            variant="primary" 
-            onClick={() => navigate('/')}
-            icon={faArrowLeft}
-          >
-            Back to Products
-          </Button>
-        </Card>
+      <div className="min-h-screen bg-slate-50 py-12">
+        <div className="mx-auto max-w-2xl px-4">
+          <Card className="p-8 text-center">
+            <h2 className="mb-4 text-2xl font-bold text-slate-900">Product Not Found</h2>
+            <p className="mb-6 text-slate-600">Sorry, we couldn't find the product you're looking for.</p>
+            <Button 
+              variant="primary" 
+              onClick={() => navigate('/products')}
+              icon={faArrowLeft}
+            >
+              Back to Products
+            </Button>
+          </Card>
+        </div>
       </div>
     );
   }
 
+  const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+  const salePrice = product.sale_price ? (typeof product.sale_price === 'string' ? parseFloat(product.sale_price) : product.sale_price) : null;
+  const originalPrice = product.original_price ? (typeof product.original_price === 'string' ? parseFloat(product.original_price) : product.original_price) : price;
+  
   const inStock = product.quantity > 0;
-  const discountPercentage = product.sale_price 
-    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
+  const discountPercentage = salePrice && originalPrice
+    ? Math.round(((originalPrice - salePrice) / originalPrice) * 100)
     : 0;
-  const displayPrice = product.sale_price || product.price;
+  const displayPrice = salePrice || price;
+  const brandName = typeof product.brand === 'object' ? product.brand.name : product.brand;
 
   return (
-    <div className="product-details-container">
-      {/* Breadcrumb Navigation */}
-      <nav className="breadcrumb-nav">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => navigate('/')}
-        >
-          Home
-        </Button>
-        <span className="breadcrumb-separator">/</span>
-        {product?.category && (
-          <>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={navigateToCategory}
-            >
-              {product.category}
-            </Button>
-            <span className="breadcrumb-separator">/</span>
-          </>
-        )}
-        <span className="breadcrumb-current">{product?.name}</span>
-      </nav>
+    <div className="min-h-screen bg-slate-50 py-6">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 md:px-6">
+        {/* Breadcrumb Navigation */}
+        <nav className="flex items-center gap-2 text-sm">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/')}
+          >
+            Home
+          </Button>
+          <FontAwesomeIcon icon={faChevronRight} className="text-xs text-slate-400" />
+          {product?.category && (
+            <>
+              <button
+                onClick={navigateToCategory}
+                className="text-blue-600 hover:text-blue-700 hover:underline"
+              >
+                {typeof product.category === 'object' ? (product.category.name || product.category.slug) : product.category}
+              </button>
+              <FontAwesomeIcon icon={faChevronRight} className="text-xs text-slate-400" />
+            </>
+          )}
+          <span className="text-slate-600">{product?.name}</span>
+        </nav>
 
-      <div className="product-details-content">
-        {/* Product Images */}
-        <div className="product-images-section">
-          <Card className="product-image-card" padding="none">
-            <ProductGallery 
-              images={productImages}
-              productName={product?.name || 'Product'}
-              className="product-detail-gallery"
-            />
-            {discountPercentage > 0 && (
-              <div className="product-badge product-badge--sale">
-                <FontAwesomeIcon icon={faTag} />
-                -{discountPercentage}% OFF
-              </div>
-            )}
-            {!inStock && (
-              <div className="product-badge product-badge--out-of-stock">
-                Out of Stock
-              </div>
-            )}
-          </Card>
-        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Product Images */}
+          <div className="relative">
+            <Card className="overflow-hidden p-4" padding="none">
+              <ProductGallery 
+                images={productImages}
+                productName={product?.name || 'Product'}
+              />
+              {discountPercentage > 0 && (
+                <div className="absolute right-4 top-4 rounded-full bg-red-600 px-3 py-1.5 text-sm font-bold text-white shadow-md">
+                  <FontAwesomeIcon icon={faTag} className="mr-1" />
+                  -{discountPercentage}% OFF
+                </div>
+              )}
+              {!inStock && (
+                <div className="absolute left-4 top-4 rounded-full bg-slate-900 px-3 py-1.5 text-sm font-bold text-white shadow-md">
+                  Out of Stock
+                </div>
+              )}
+            </Card>
+          </div>
 
-        {/* Product Info */}
-        <div className="product-info-section">
-          <Card className="product-info-card" padding="lg">
-            {/* Product Title & Rating */}
-            <div className="product-header">
-              <div className="product-title-section">
-                <h1 className="product-title">{product.name}</h1>
-                {product.brand && (
-                  <p className="product-brand">by {product.brand}</p>
+          {/* Product Info */}
+          <div className="space-y-6">
+            <Card className="p-6">
+              {/* Product Title & Rating */}
+              <div className="mb-4">
+                <h1 className="mb-2 text-3xl font-bold text-slate-900">{product.name}</h1>
+                {brandName && (
+                  <p className="text-lg text-slate-600">by {brandName}</p>
                 )}
               </div>
               
-              <div className="product-actions">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={faHeart}
-                  onClick={handleWishlistToggle}
-                  className={`wishlist-btn ${isInWishlist() ? 'active' : ''}`}
-                  aria-label={isInWishlist() ? 'Remove from wishlist' : 'Add to wishlist'}
-                >
-                  {isInWishlist() ? 'In Wishlist' : 'Add to Wishlist'}
-                </Button>
-                
-                <div className="share-dropdown">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    icon={faShare}
-                    onClick={() => handleShare()}
-                    className="share-btn"
-                  >
-                    Share
-                  </Button>
-                  {shareDropdownOpen && (
-                    <div className="share-options">
-                      <button onClick={() => handleShare('facebook')}>Facebook</button>
-                      <button onClick={() => handleShare('twitter')}>Twitter</button>
-                      <button onClick={() => handleShare('copy')}>Copy Link</button>
-                    </div>
-                  )}
-                </div>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  icon={faCodeCompare}
-                  onClick={() => navigate(`/compare?add=${product.id}`)}
-                >
-                  Compare
-                </Button>
-              </div>
-            </div>
-              
               {product.rating && (
-                <div className="product-rating">
-                  <div className="stars-container">
-                    {renderStars(product.rating)}
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {renderStars(typeof product.rating === 'string' ? parseFloat(product.rating) : product.rating)}
                   </div>
-                  <span className="rating-value">({product.rating})</span>
+                  <span className="font-semibold text-slate-700">
+                    ({(typeof product.rating === 'string' ? parseFloat(product.rating) : product.rating).toFixed(1)})
+                  </span>
                   {product.reviews_count && (
-                    <span className="reviews-count">
+                    <span className="text-slate-600">
                       {product.reviews_count} review{product.reviews_count !== 1 ? 's' : ''}
                     </span>
                   )}
                 </div>
               )}
 
-            {/* Price */}
-            <div className="product-price-section">
-              <div className="price-container">
-                <span className="current-price">${displayPrice.toFixed(2)}</span>
-                {product.sale_price && (
-                  <span className="original-price">${product.price.toFixed(2)}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Product Variants */}
-            {renderProductVariants()}
-
-            {/* Description */}
-            <div className="product-description">
-              <h3>Description</h3>
-              <p>{product.description}</p>
-            </div>
-
-            {/* Stock Status */}
-            <div className="product-stock">
-              <div className={`stock-indicator ${inStock ? 'in-stock' : 'out-of-stock'}`}>
-                {inStock ? (
-                  product.quantity > 20 ? (
-                    <span>✓ In Stock - Ready to ship</span>
-                  ) : (
-                    <span>⚠ Only {product.quantity} left in stock</span>
-                  )
-                ) : (
-                  <span>✗ Out of Stock</span>
-                )}
-              </div>
-            </div>
-
-            {/* Add to Cart Section */}
-            <div className="add-to-cart-section">
-              {inStock && (
-                <div className="quantity-selector">
-                  <label htmlFor="quantity">Quantity:</label>
-                  <select
-                    id="quantity"
-                    value={selectedQuantity}
-                    onChange={handleQuantityChange}
-                    className="quantity-select"
-                  >
-                    {getQuantityOptions().map(num => (
-                      <option key={num} value={num}>
-                        {num}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="action-buttons">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  icon={faCartPlus}
-                  disabled={!inStock}
-                  onClick={handleAddToCart}
-                  className="add-to-cart-btn"
-                  fullWidth
-                >
-                  {inStock ? `Add ${selectedQuantity} to Cart` : 'Out of Stock'}
-                </Button>
-
-                <div className="secondary-actions">
-                  {inCart() > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      icon={faTrashAlt}
-                      onClick={handleRemoveFromCart}
-                      className="remove-from-cart-btn"
-                    >
-                      Remove from Cart ({inCart()})
-                    </Button>
+              {/* Price */}
+              <div className="mb-6">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-bold text-slate-900">${displayPrice.toFixed(2)}</span>
+                  {salePrice && originalPrice && (
+                    <span className="text-xl text-slate-500 line-through">${originalPrice.toFixed(2)}</span>
                   )}
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    icon={faBell}
-                    onClick={() => navigate(`/price-alerts?product=${product.id}`)}
-                    className="price-alert-btn"
-                  >
-                    Price Alert
-                  </Button>
                 </div>
               </div>
-            </div>
 
-            {/* Product Features */}
-            <div className="product-features">
-              <div className="feature-item">
-                <FontAwesomeIcon icon={faTruck} />
-                <span>Free shipping on orders over $50</span>
+              {/* Product Variants */}
+              {renderProductVariants()}
+
+              {/* Description */}
+              <div className="mb-6">
+                <h3 className="mb-2 text-lg font-semibold text-slate-900">Description</h3>
+                <p className="text-slate-700 leading-relaxed">{product.description}</p>
               </div>
-              <div className="feature-item">
-                <FontAwesomeIcon icon={faShield} />
-                <span>1-year warranty included</span>
+
+              {/* Stock Status */}
+              <div className="mb-6">
+                <div className={`rounded-lg border-2 p-3 ${
+                  inStock 
+                    ? 'border-green-200 bg-green-50 text-green-800' 
+                    : 'border-red-200 bg-red-50 text-red-800'
+                }`}>
+                  {inStock ? (
+                    product.quantity > 20 ? (
+                      <span className="font-semibold">✓ In Stock - Ready to ship</span>
+                    ) : (
+                      <span className="font-semibold">⚠ Only {product.quantity} left in stock</span>
+                    )
+                  ) : (
+                    <span className="font-semibold">✗ Out of Stock</span>
+                  )}
+                </div>
               </div>
-              <div className="feature-item">
-                <FontAwesomeIcon icon={faShoppingCart} />
-                <span>Easy returns within 30 days</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
 
-      {/* Additional Product Information */}
-      <div className="product-additional-info">
-        {/* Specifications */}
-        {product.specifications && (
-          <Card className="specifications-card" padding="lg">
-            {renderSpecifications()}
-          </Card>
-        )}
-
-        {/* Reviews Toggle */}
-        {reviews.length > 0 && (
-          <Card className="reviews-card" padding="lg">
-            <div className="reviews-header">
-              <h3>Customer Reviews ({reviews.length})</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowReviews(!showReviews)}
-              >
-                {showReviews ? 'Hide Reviews' : 'Show Reviews'}
-              </Button>
-            </div>
-            {renderReviews()}
-          </Card>
-        )}
-
-        {/* Recommendations */}
-        {recommendations.length > 0 && (
-          <Card className="recommendations-card" padding="lg">
-            <h3>You might also like</h3>
-            <div className="recommendations-grid">
-              {recommendations.slice(0, 4).map(item => (
-                <div 
-                  key={item.id} 
-                  className="recommendation-item"
-                  onClick={() => navigate(`/products/${item.slug}`)}
-                >
-                  <img src={item.picture} alt={item.name} />
-                  <div className="recommendation-info">
-                    <h4>{item.name}</h4>
-                    <span className="recommendation-price">
-                      ${item.sale_price || item.price}
-                    </span>
+              {/* Add to Cart Section */}
+              <div className="space-y-4">
+                {inStock && (
+                  <div>
+                    <label htmlFor="quantity" className="mb-2 block text-sm font-semibold text-slate-700">Quantity:</label>
+                    <select
+                      id="quantity"
+                      value={selectedQuantity}
+                      onChange={handleQuantityChange}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                      {getQuantityOptions().map(num => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
+                )}
 
-        {/* Related Products from Same Category */}
-        {relatedProducts.length > 0 && (
-          <Card className="related-products-card" padding="lg">
-            <div className="section-header">
-              <h3>More from {product?.category}</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={navigateToCategory}
-              >
-                View All
-              </Button>
-            </div>
-            <div className="related-products-grid">
-              {relatedProducts.map(item => (
-                <div 
-                  key={item.id} 
-                  className="related-product-item"
-                  onClick={() => navigate(`/products/${item.slug}`)}
-                >
-                  <img src={item.picture} alt={item.name} />
-                  <div className="related-product-info">
-                    <h4>{item.name}</h4>
-                    <div className="price-info">
-                      <span className="price">
-                        ${item.sale_price || item.price}
-                      </span>
-                      {item.sale_price && (
-                        <span className="original-price">
-                          ${item.price}
-                        </span>
+                <div className="space-y-3">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    icon={faCartPlus}
+                    disabled={!inStock}
+                    onClick={handleAddToCart}
+                    fullWidth
+                  >
+                    {inStock ? `Add ${selectedQuantity} to Cart` : 'Out of Stock'}
+                  </Button>
+
+                  <div className="flex gap-2">
+                    {inCart() > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        icon={faTrashAlt}
+                        onClick={handleRemoveFromCart}
+                        className="flex-1"
+                      >
+                        Remove from Cart ({inCart()})
+                      </Button>
+                    )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={isInWishlist() ? faHeart : faHeart}
+                      onClick={handleWishlistToggle}
+                      className={`flex-1 ${isInWishlist() ? 'text-red-600' : ''}`}
+                    >
+                      {isInWishlist() ? 'In Wishlist' : 'Add to Wishlist'}
+                    </Button>
+                    
+                    <div className="relative">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={faShare}
+                        onClick={() => handleShare()}
+                      >
+                        Share
+                      </Button>
+                      {shareDropdownOpen && (
+                        <div className="absolute right-0 top-full z-10 mt-2 w-40 rounded-lg border border-slate-200 bg-white shadow-md">
+                          <button 
+                            onClick={() => handleShare('facebook')}
+                            className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            Facebook
+                          </button>
+                          <button 
+                            onClick={() => handleShare('twitter')}
+                            className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            Twitter
+                          </button>
+                          <button 
+                            onClick={() => handleShare('copy')}
+                            className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            Copy Link
+                          </button>
+                        </div>
                       )}
                     </div>
-                    {item.rating && (
-                      <div className="rating-stars">
-                        {renderStars(item.rating)}
-                      </div>
-                    )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={faCodeCompare}
+                      onClick={() => navigate(`/compare?add=${product.id}`)}
+                    >
+                      Compare
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-        )}
-      </div>
+              </div>
 
-      {/* Featured Products Section */}
-      <div className="featured-products-section">
-        <FeaturedProducts />
+              {/* Product Features */}
+              <div className="mt-6 space-y-3 border-t border-slate-200 pt-6">
+                <div className="flex items-center gap-3 text-sm text-slate-700">
+                  <FontAwesomeIcon icon={faTruck} className="text-blue-600" />
+                  <span>Free shipping on orders over $50</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-700">
+                  <FontAwesomeIcon icon={faShield} className="text-blue-600" />
+                  <span>1-year warranty included</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-700">
+                  <FontAwesomeIcon icon={faShoppingCart} className="text-blue-600" />
+                  <span>Easy returns within 30 days</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Additional Product Information */}
+        <div className="space-y-6">
+          {/* Specifications */}
+          {product.specifications && (
+            <Card className="p-6">
+              {renderSpecifications()}
+            </Card>
+          )}
+
+          {/* Reviews Toggle */}
+          {reviews.length > 0 && (
+            <Card className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-slate-900">Customer Reviews ({reviews.length})</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowReviews(!showReviews)}
+                >
+                  {showReviews ? 'Hide Reviews' : 'Show Reviews'}
+                </Button>
+              </div>
+              {renderReviews()}
+            </Card>
+          )}
+
+          {/* Recommendations */}
+          {recommendations.length > 0 && (
+            <Card className="p-6">
+              <h3 className="mb-4 text-xl font-bold text-slate-900">You might also like</h3>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {recommendations.slice(0, 4).map(item => {
+                  const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+                  const itemSalePrice = item.sale_price ? (typeof item.sale_price === 'string' ? parseFloat(item.sale_price) : item.sale_price) : null;
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="group cursor-pointer rounded-lg border border-slate-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-md"
+                      onClick={() => navigate(`/product/${item.slug}`)}
+                    >
+                      <img 
+                        src={item.picture} 
+                        alt={item.name}
+                        className="mb-3 h-32 w-full rounded-lg object-cover"
+                      />
+                      <h4 className="mb-2 line-clamp-2 text-sm font-semibold text-slate-900">{item.name}</h4>
+                      <span className="text-lg font-bold text-slate-900">
+                        ${(itemSalePrice || itemPrice).toFixed(2)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+
+          {/* Related Products from Same Category */}
+          {relatedProducts.length > 0 && (
+            <Card className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-slate-900">
+                  More from {product?.category ? (typeof product.category === 'object' ? (product.category.name || product.category.slug) : product.category) : 'this category'}
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={navigateToCategory}
+                >
+                  View All
+                </Button>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {relatedProducts.map(item => {
+                  const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+                  const itemSalePrice = item.sale_price ? (typeof item.sale_price === 'string' ? parseFloat(item.sale_price) : item.sale_price) : null;
+                  const itemOriginalPrice = item.original_price ? (typeof item.original_price === 'string' ? parseFloat(item.original_price) : item.original_price) : itemPrice;
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="group cursor-pointer rounded-lg border border-slate-200 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-md"
+                      onClick={() => navigate(`/product/${item.slug}`)}
+                    >
+                      <img 
+                        src={item.picture} 
+                        alt={item.name}
+                        className="mb-3 h-32 w-full rounded-lg object-cover"
+                      />
+                      <h4 className="mb-2 line-clamp-2 text-sm font-semibold text-slate-900">{item.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-slate-900">
+                          ${(itemSalePrice || itemPrice).toFixed(2)}
+                        </span>
+                        {itemSalePrice && (
+                          <span className="text-sm text-slate-500 line-through">
+                            ${itemOriginalPrice.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      {item.rating && (
+                        <div className="mt-2 flex items-center gap-1">
+                          {renderStars(item.rating)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Featured Products Section */}
+        <div className="mt-8">
+          <FeaturedProducts />
+        </div>
       </div>
     </div>
   );

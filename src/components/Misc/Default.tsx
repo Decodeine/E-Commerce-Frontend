@@ -9,7 +9,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
-import "./css/Default.css";
 
 const Default: React.FC = () => {
   const goBack = () => {
