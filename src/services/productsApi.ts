@@ -177,7 +177,8 @@ class ProductsAPI {
 
   async getFeaturedProducts(): Promise<Product[]> {
     const response = await axios.get(`${this.baseUrl}featured/`);
-    return response.data;
+    // Handle paginated response (results) or direct array
+    return Array.isArray(response.data) ? response.data : (response.data.results || []);
   }
 
   async getDealsProducts(): Promise<Product[]> {
@@ -267,7 +268,8 @@ class ProductsAPI {
 
   async getCategories(): Promise<Category[]> {
     const response = await axios.get(`${this.baseUrl}categories/`);
-    return response.data;
+    // Handle paginated response (results) or direct array
+    return Array.isArray(response.data) ? response.data : (response.data.results || []);
   }
 
   async getCategory(id: number): Promise<Category> {
