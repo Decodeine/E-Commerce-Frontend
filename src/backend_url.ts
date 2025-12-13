@@ -1,1 +1,1 @@
-export const API_PATH = "http://localhost:8000/api/";
+export const API_PATH = "https://web-production-a739.up.railway.app/api/";
