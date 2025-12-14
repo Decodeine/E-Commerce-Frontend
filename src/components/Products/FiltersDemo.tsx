@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter, faSearch, faTags, faShoppingBag } from '@fortawesome/free-solid-svg-icons';
 import Card from '../UI/Card/Card';
-import './css/FiltersDemo.css';
 
 const FiltersDemo: React.FC = () => {
   const filters = useSelector((state: any) => state.store.filters);

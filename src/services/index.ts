@@ -20,6 +20,8 @@ export {
   canTrackOrder
 } from './ordersApi';
 
+export { swapApi } from './swapApi';
+
 // Export types
 export type { 
   Order, 

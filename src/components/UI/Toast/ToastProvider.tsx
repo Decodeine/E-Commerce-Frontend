@@ -7,7 +7,6 @@ import {
   faTimes,
   faExclamationCircle
 } from '@fortawesome/free-solid-svg-icons';
-import './css/Toast.css';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center';

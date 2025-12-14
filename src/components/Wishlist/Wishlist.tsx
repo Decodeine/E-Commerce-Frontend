@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHeart, 
@@ -7,7 +8,10 @@ import {
   faShoppingCart, 
   faShare,
   faEye,
-  faStar
+  faStar,
+  faThLarge,
+  faList,
+  faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
@@ -17,7 +21,6 @@ import ProductCard from '../Products/ProductCard';
 import { fetchWishlist, addProductToCart } from '../../store/actions/storeActions';
 import { productsApi } from '../../services/productsApi';
 import type { AppDispatch } from '../../store/store';
-import './css/Wishlist.css';
 
 interface WishlistItem {
   id: number;
@@ -25,9 +28,9 @@ interface WishlistItem {
     id: number;
     slug: string;
     name: string;
-    price: string; // Backend returns string, not number
+    price: string;
     original_price?: string;
-    picture: string; // Backend uses 'picture', not 'image'
+    picture: string;
     rating?: string;
     review_count?: number;
     in_stock: boolean;
@@ -35,40 +38,24 @@ interface WishlistItem {
       name: string;
     };
   };
-  added_at: string; // Backend returns 'added_at', not 'added_to_wishlist'
+  added_at: string;
   notes?: string;
 }
 
 const Wishlist: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { wishlist, loading } = useSelector((state: any) => state.store);
   const { token } = useSelector((state: any) => state.auth);
-  
-  // Derive isAuthenticated from token
-  const isAuthenticated = !!(token && token.trim() !== '');
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('🐛 Wishlist Debug - Auth State:', {
-      token: token ? `${token.substring(0, 20)}...` : 'null',
-      isAuthenticated,
-      tokenLength: token ? token.length : 0,
-      tokenType: typeof token,
-      fullToken: token // Temporarily log full token for debugging
-    });
-  }, [token, isAuthenticated]);
-  
   const { showToast } = useToast();
   
+  const isAuthenticated = !!(token && token.trim() !== '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'added' | 'price' | 'name'>('added');
 
   useEffect(() => {
-    console.log('🔄 Wishlist useEffect - isAuthenticated:', isAuthenticated, 'token:', token ? 'Present' : 'Missing');
     if (isAuthenticated && token) {
       dispatch(fetchWishlist());
-    } else {
-      console.log('⚠️ Not fetching wishlist - authentication missing');
     }
   }, [dispatch, isAuthenticated, token]);
 
@@ -83,12 +70,8 @@ const Wishlist: React.FC = () => {
     }
 
     try {
-      // Use the API directly since you need to pass the token
       await productsApi.removeProductFromWishlist(productId, token);
-      
-      // Refresh wishlist
       dispatch(fetchWishlist());
-      
       showToast({
         type: 'success',
         title: 'Removed from Wishlist',
@@ -113,7 +96,6 @@ const Wishlist: React.FC = () => {
     });
   };
 
-  // Adapter function to transform backend data structure to match ProductCard expectations
   const adaptProductForCard = (wishlistItem: WishlistItem) => {
     const basePrice = parseFloat(wishlistItem.product.price);
     const originalPrice = wishlistItem.product.original_price ? parseFloat(wishlistItem.product.original_price) : null;
@@ -122,10 +104,9 @@ const Wishlist: React.FC = () => {
       id: wishlistItem.product.id,
       name: wishlistItem.product.name,
       slug: wishlistItem.product.slug,
-      // If there's an original_price, then the current price is a sale price
-      price: originalPrice || basePrice, // Original price for calculating discount
-      sale_price: originalPrice ? basePrice : undefined, // Current price if on sale
-      image: wishlistItem.product.picture, // Map picture to image
+      price: originalPrice || basePrice,
+      sale_price: originalPrice ? basePrice : undefined,
+      image: wishlistItem.product.picture,
       rating: wishlistItem.product.rating ? parseFloat(wishlistItem.product.rating) : undefined,
       reviews_count: wishlistItem.product.review_count,
       in_stock: wishlistItem.product.in_stock,
@@ -141,7 +122,6 @@ const Wishlist: React.FC = () => {
         url: window.location.href
       });
     } else {
-      // Fallback to copy URL
       navigator.clipboard.writeText(window.location.href);
       showToast({
         type: 'info',
@@ -174,199 +154,220 @@ const Wishlist: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="wishlist-container">
-        <Card className="auth-required-card" padding="xl">
-          <div className="auth-required-content">
-            <FontAwesomeIcon icon={faHeart} className="auth-icon" />
-            <h2>Sign in to view your wishlist</h2>
-            <p>Save your favorite products and never lose track of them!</p>
-            <Button variant="primary" size="lg">
+      <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+        <div className="mx-auto max-w-4xl">
+          <Card className="p-12 text-center">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
+              <FontAwesomeIcon icon={faHeart} className="text-5xl text-red-500" />
+            </div>
+            <h2 className="mb-3 text-3xl font-bold text-slate-900">Sign in to view your wishlist</h2>
+            <p className="mb-8 text-slate-600">Save your favorite products and never lose track of them!</p>
+            <Button variant="primary" size="lg" onClick={() => navigate('/login')}>
               Sign In
             </Button>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="wishlist-container">
-        <Loading 
-          variant="spinner" 
-          size="lg" 
-          text="Loading your wishlist..." 
-        />
+      <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex min-h-[400px] items-center justify-center">
+            <Loading variant="spinner" size="lg" text="Loading your wishlist..." />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!wishlist || wishlist.length === 0) {
     return (
-      <div className="wishlist-container">
-        <Card className="empty-wishlist-card" padding="xl">
-          <div className="empty-wishlist-content">
-            <FontAwesomeIcon icon={faHeart} className="empty-icon" />
-            <h2>Your wishlist is empty</h2>
-            <p>Start adding products you love to keep track of them!</p>
-            <Button variant="primary" size="lg">
+      <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+        <div className="mx-auto max-w-4xl">
+          <Card className="p-12 text-center">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
+              <FontAwesomeIcon icon={faHeart} className="text-5xl text-red-500" />
+            </div>
+            <h2 className="mb-3 text-3xl font-bold text-slate-900">Your wishlist is empty</h2>
+            <p className="mb-8 text-slate-600">Start adding products you love to keep track of them!</p>
+            <Button variant="primary" size="lg" onClick={() => navigate('/products')}>
               Browse Products
+              <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
             </Button>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="wishlist-container">
-      {/* Wishlist Header */}
-      <div className="wishlist-header">
-        <div className="header-content">
-          <div className="header-info">
-            <h1 className="wishlist-title">
-              <FontAwesomeIcon icon={faHeart} />
-              My Wishlist
-            </h1>
-            <p className="wishlist-count">
-              {wishlist.length} item{wishlist.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          
-          <div className="header-actions">
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={faShare}
-              onClick={handleShareWishlist}
-            >
-              Share
-            </Button>
-            
-            <div className="view-controls">
-              <button
-                className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode('grid')}
-              >
-                Grid
-              </button>
-              <button
-                className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                onClick={() => setViewMode('list')}
-              >
-                List
-              </button>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Header */}
+        <Card className="p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-slate-900">
+                <FontAwesomeIcon icon={faHeart} className="text-red-500" />
+                My Wishlist
+              </h1>
+              <p className="text-slate-600">
+                {wishlist.length} item{wishlist.length !== 1 ? 's' : ''} saved
+              </p>
             </div>
             
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="sort-select"
-            >
-              <option value="added">Recently Added</option>
-              <option value="price">Price: Low to High</option>
-              <option value="name">Name: A to Z</option>
-            </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                icon={<FontAwesomeIcon icon={faShare} />}
+                onClick={handleShareWishlist}
+              >
+                Share
+              </Button>
+              
+              <div className="flex rounded-lg border border-slate-200">
+                <button
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                  onClick={() => setViewMode('grid')}
+                >
+                  <FontAwesomeIcon icon={faThLarge} />
+                </button>
+                <button
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                  onClick={() => setViewMode('list')}
+                >
+                  <FontAwesomeIcon icon={faList} />
+                </button>
+              </div>
+              
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+              >
+                <option value="added">Recently Added</option>
+                <option value="price">Price: Low to High</option>
+                <option value="name">Name: A to Z</option>
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
+        </Card>
 
-      {/* Wishlist Content */}
-      <div className={`wishlist-content ${viewMode}`}>
+        {/* Wishlist Content */}
         {viewMode === 'grid' ? (
-          <div className="wishlist-grid">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {sortedWishlist.map((item: WishlistItem) => (
-              <div key={item.id} className="wishlist-item-wrapper">
+              <div key={item.id} className="space-y-2">
                 <ProductCard
                   product={adaptProductForCard(item)}
                   onAddToCart={() => handleAddToCart(item.product)}
                   onToggleWishlist={() => handleRemoveFromWishlist(item.product.id)}
                   isInWishlist={true}
                 />
-                <div className="wishlist-item-meta">
-                  <span className="added-date">
-                    Added {new Date(item.added_at).toLocaleDateString()}
-                  </span>
-                  {item.notes && (
-                    <p className="item-notes">{item.notes}</p>
-                  )}
+                <div className="text-xs text-slate-500">
+                  Added {new Date(item.added_at).toLocaleDateString()}
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="wishlist-list">
+          <div className="space-y-4">
             {sortedWishlist.map((item: WishlistItem) => (
-              <Card key={item.id} className="wishlist-list-item" padding="md">
-                <div className="list-item-content">
-                  <div className="item-image">
-                    <img src={item.product.picture} alt={item.product.name} />
+              <Card key={item.id} className="p-6">
+                <div className="flex flex-col gap-4 md:flex-row">
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={item.product.picture} 
+                      alt={item.product.name}
+                      className="h-32 w-32 rounded-lg object-cover"
+                    />
                   </div>
                   
-                  <div className="item-details">
-                    <h3 className="item-name">{item.product.name}</h3>
+                  <div className="flex-1">
+                    <h3 
+                      className="mb-2 cursor-pointer text-lg font-semibold text-slate-900 transition-colors hover:text-blue-600"
+                      onClick={() => navigate(`/product/${item.product.slug}`)}
+                    >
+                      {item.product.name}
+                    </h3>
                     {item.product.brand?.name && (
-                      <p className="item-brand">by {item.product.brand.name}</p>
+                      <p className="mb-2 text-sm text-slate-600">by {item.product.brand.name}</p>
                     )}
                     
-                    <div className="item-price">
-                      <span className="current-price">
+                    <div className="mb-2 flex items-baseline gap-2">
+                      <span className="text-xl font-bold text-slate-900">
                         ${parseFloat(item.product.price).toFixed(2)}
                       </span>
                       {item.product.original_price && (
-                        <span className="original-price">
+                        <span className="text-sm text-slate-500 line-through">
                           ${parseFloat(item.product.original_price).toFixed(2)}
                         </span>
                       )}
                     </div>
                     
                     {item.product.rating && (
-                      <div className="item-rating">
-                        <div className="stars">
+                      <div className="mb-2 flex items-center gap-2">
+                        <div className="flex text-yellow-400">
                           {Array.from({ length: 5 }, (_, i) => (
                             <FontAwesomeIcon
                               key={i}
                               icon={faStar}
-                              className={i < Math.floor(parseFloat(item.product.rating)) ? 'star-filled' : 'star-empty'}
+                              className={i < Math.floor(parseFloat(item.product.rating || '0')) ? 'text-yellow-400' : 'text-slate-300'}
                             />
                           ))}
                         </div>
-                        <span className="rating-text">
+                        <span className="text-sm text-slate-600">
                           ({item.product.review_count} reviews)
                         </span>
                       </div>
                     )}
                     
-                    <p className="added-date">
+                    <p className="text-xs text-slate-500">
                       Added on {new Date(item.added_at).toLocaleDateString()}
                     </p>
                   </div>
                   
-                  <div className="item-actions">
+                  <div className="flex flex-col gap-2 md:w-48">
                     <Button
                       variant="primary"
                       size="sm"
-                      icon={faShoppingCart}
+                      icon={<FontAwesomeIcon icon={faShoppingCart} />}
                       onClick={() => handleAddToCart(item.product)}
                       disabled={!item.product.in_stock}
+                      fullWidth
                     >
                       {item.product.in_stock ? 'Add to Cart' : 'Out of Stock'}
                     </Button>
                     
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      icon={faEye}
+                      icon={<FontAwesomeIcon icon={faEye} />}
+                      onClick={() => navigate(`/product/${item.product.slug}`)}
+                      fullWidth
                     >
-                      View
+                      View Product
                     </Button>
                     
                     <Button
                       variant="outline"
                       size="sm"
-                      icon={faTrash}
+                      icon={<FontAwesomeIcon icon={faTrash} />}
                       onClick={() => handleRemoveFromWishlist(item.product.id)}
-                      className="remove-btn"
+                      className="text-red-600 hover:text-red-700"
+                      fullWidth
                     >
                       Remove
                     </Button>

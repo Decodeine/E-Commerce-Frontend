@@ -4,10 +4,9 @@ import { faHeart, faCartPlus, faEye } from '@fortawesome/free-solid-svg-icons';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { addProductToCart } from '../../store/actions/storeActions';
-import { useToast } from '../UI/Toast/ToastProvider'; // Add this import
+import { useToast } from '../UI/Toast/ToastProvider';
 import Card from '../UI/Card/Card';
 import Button from '../UI/Button/Button';
-import './css/ProductCard.css';
 
 interface Product {
   id: number;
@@ -41,7 +40,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const navigate = useNavigate();
   const { showToast } = useToast(); // Add toast hook
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking add to cart
     if (onAddToCart) {
       onAddToCart(product.id);
     } else {
@@ -57,102 +57,148 @@ const ProductCard: React.FC<ProductCardProps> = ({
     });
   };
 
-  const handleToggleWishlist = () => {
+  const handleToggleWishlist = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking wishlist button
     if (onToggleWishlist) {
       onToggleWishlist(product.id);
-      
-      // Add toast notification
-      showToast({
-        type: isInWishlist ? 'info' : 'success',
-        title: isInWishlist ? 'Removed from Wishlist' : 'Added to Wishlist!',
-        message: `${product.name} has been ${isInWishlist ? 'removed from' : 'added to'} your wishlist.`,
-        duration: 3000
-      });
     }
   };
 
   const handleViewProduct = () => {
-    navigate(`/products/${product.slug}`);
+    navigate(`/product/${product.slug}`);
   };
 
+  const discountPercent = product.sale_price 
+    ? Math.round(((product.price - product.sale_price) / product.price) * 100)
+    : 0;
+
   return (
-    <Card 
-      variant="glass" 
-      className={`product-card ${viewMode === 'list' ? 'product-card--list' : 'product-card--grid'} ${!product.in_stock ? 'out-of-stock' : ''}`}
+    <div 
+      className={`
+        group relative flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md cursor-pointer
+        ${viewMode === 'list' ? 'flex-row md:flex-row' : 'flex-col'}
+        ${!product.in_stock ? 'opacity-70' : ''}
+      `}
+      onClick={handleViewProduct}
     >
-      <div className="product-card__image">
+      {/* Image Section */}
+      <div 
+        className={`
+          relative overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200
+          ${viewMode === 'list' ? 'w-48 h-48 flex-shrink-0 md:w-56 md:h-56' : 'aspect-square h-64'}
+        `}
+      >
         <img 
           src={product.image || '/images/placeholder-product.jpg'} 
           alt={product.name}
           onClick={handleViewProduct}
+          className="h-full w-full cursor-pointer object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <div className="product-card__overlay">
+        
+        {/* Overlay on hover */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleViewProduct}
-            className="overlay-btn"
+            className="h-12 w-12 rounded-full bg-white/90 text-slate-700 shadow-md hover:bg-white hover:scale-110"
             aria-label={`View ${product.name}`}
           >
             <FontAwesomeIcon icon={faEye} />
           </Button>
         </div>
-        {product.sale_price && (
-          <div className="product-card__badge">
-            {Math.round(((product.price - product.sale_price) / product.price) * 100)}% OFF
+
+        {/* Sale Badge */}
+        {product.sale_price && discountPercent > 0 && (
+          <div className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-3 py-1 text-xs font-semibold uppercase text-white shadow-md">
+            {discountPercent}% OFF
           </div>
         )}
+
+        {/* Out of Stock Badge */}
         {!product.in_stock && (
-          <div className="product-card__out-of-stock">Out of Stock</div>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-black/80 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm">
+            Out of Stock
+          </div>
         )}
       </div>
       
-      <div className="product-card__content">
+      {/* Content Section */}
+      <div 
+        className={`
+          flex flex-1 flex-col gap-2 p-4
+          ${viewMode === 'list' ? 'justify-center' : ''}
+        `}
+      >
         {product.brand && (
-          <div className="product-card__brand">{product.brand.name || product.brand}</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
+            {product.brand.name || product.brand}
+          </div>
         )}
         
-        <h3 className="product-card__title" onClick={handleViewProduct}>
+        <h3 
+          className="cursor-pointer text-base font-semibold text-slate-900 line-clamp-2 transition-colors hover:text-blue-600"
+          onClick={handleViewProduct}
+        >
           {product.name}
         </h3>
         
-        <div className="product-card__price">
+        {/* Price */}
+        <div className="flex items-baseline gap-2">
           {product.sale_price ? (
             <>
-              <span className="current-price">${parseFloat(String(product.sale_price)).toFixed(2)}</span>
-              <span className="original-price">${parseFloat(String(product.price)).toFixed(2)}</span>
+              <span className="text-xl font-bold text-emerald-600">
+                ${parseFloat(String(product.sale_price)).toFixed(2)}
+              </span>
+              <span className="text-sm text-slate-400 line-through">
+                ${parseFloat(String(product.price)).toFixed(2)}
+              </span>
             </>
           ) : (
-            <span className="current-price">${parseFloat(String(product.price)).toFixed(2)}</span>
+            <span className="text-xl font-bold text-emerald-600">
+              ${parseFloat(String(product.price)).toFixed(2)}
+            </span>
           )}
         </div>
         
+        {/* Rating */}
         {product.rating && (
-          <div className="product-card__rating">
-            <span className="rating-stars">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <span className="text-amber-400">
               {'★'.repeat(Math.floor(Number(product.rating)))}
               {'☆'.repeat(5 - Math.floor(Number(product.rating)))}
             </span>
-            <span className="rating-value">({Number(product.rating).toFixed(1)})</span>
+            <span className="font-semibold text-slate-700">
+              ({Number(product.rating).toFixed(1)})
+            </span>
             {product.reviews_count && (
-              <span className="reviews-count"> • {product.reviews_count} reviews</span>
+              <span className="text-slate-500">
+                • {product.reviews_count} reviews
+              </span>
             )}
           </div>
         )}
         
+        {/* Description (list view only) */}
         {viewMode === 'list' && (
-          <div className="product-card__description">
+          <p className="mt-2 line-clamp-3 text-sm text-slate-600">
             High-quality product with excellent features and reliable performance.
-          </div>
+          </p>
         )}
       </div>
       
-      <div className="product-card__actions">
+      {/* Actions */}
+      <div 
+        className={`
+          flex gap-2 p-4 pt-2
+          ${viewMode === 'list' ? 'flex-col justify-center w-48 flex-shrink-0 md:w-56' : 'flex-row'}
+        `}
+      >
         <Button
           variant="primary"
           onClick={handleAddToCart}
           icon={<FontAwesomeIcon icon={faCartPlus} />}
-          className="add-to-cart-btn"
+          className="flex-1"
           disabled={product.in_stock === false}
         >
           {product.in_stock === false ? 'Out of Stock' : 'Add to Cart'}
@@ -162,13 +208,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           variant={isInWishlist ? "danger" : "outline"}
           onClick={handleToggleWishlist}
           icon={<FontAwesomeIcon icon={faHeart} />}
-          className="wishlist-btn"
+          className={`${viewMode === 'list' ? 'w-full' : ''} ${isInWishlist ? 'text-red-600' : ''}`}
           aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
-          {isInWishlist ? 'Remove' : 'Wishlist'}
+          {viewMode === 'list' ? (isInWishlist ? 'Remove' : 'Wishlist') : ''}
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };
 

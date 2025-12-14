@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import Button from '../Button/Button';
-import './Modal.css';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -122,9 +121,17 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const sizeClasses = {
+    sm: 'max-w-md',
+    md: 'max-w-2xl',
+    lg: 'max-w-4xl',
+    xl: 'max-w-6xl',
+    full: 'max-w-full mx-4'
+  };
+
   const modalContent = (
     <div 
-      className={`modal-backdrop ${backdropClassName}`} 
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-8 ${backdropClassName}`}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -132,41 +139,39 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div 
         ref={modalRef}
-        className={`modal modal--${size} ${className}`}
+        className={`w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden rounded-xl bg-white shadow-xl ${className}`}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         {(title || showCloseButton) && (
-          <div className="modal__header">
+          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
             {title && (
-              <h2 id="modal-title" className="modal__title">
+              <h2 id="modal-title" className="text-xl font-bold text-slate-900">
                 {title}
               </h2>
             )}
             {showCloseButton && (
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={faTimes}
+              <button
                 onClick={onClose}
-                className="modal__close"
+                className="ml-auto rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 aria-label="Close modal"
               >
-                <span className="sr-only">Close</span>
-              </Button>
+                <FontAwesomeIcon icon={faTimes} className="text-lg" />
+              </button>
             )}
           </div>
         )}
 
         {/* Modal Body */}
-        <div className="modal__body">
+        <div className="overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 140px)' }}>
           {children}
         </div>
 
         {/* Modal Footer */}
         {footer && (
-          <div className="modal__footer">
+          <div className="border-t border-slate-200 px-6 py-4">
             {footer}
           </div>
         )}
@@ -214,7 +219,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   };
 
   const footer = (
-    <div className="modal-actions">
+    <div className="flex justify-end gap-3">
       <Button
         variant="outline"
         onClick={onClose}
@@ -239,9 +244,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       title={title}
       size="sm"
       footer={footer}
-      className={`confirm-modal confirm-modal--${type}`}
     >
-      <p className="confirm-modal__message">{message}</p>
+      <p className="text-slate-700">{message}</p>
     </Modal>
   );
 };
@@ -265,12 +269,19 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   buttonText = 'OK'
 }) => {
   const footer = (
-    <div className="modal-actions">
+    <div className="flex justify-end">
       <Button variant="primary" onClick={onClose}>
         {buttonText}
       </Button>
     </div>
   );
+
+  const typeColors = {
+    info: 'text-blue-600',
+    success: 'text-green-600',
+    warning: 'text-yellow-600',
+    error: 'text-red-600'
+  };
 
   return (
     <Modal
@@ -279,9 +290,8 @@ export const AlertModal: React.FC<AlertModalProps> = ({
       title={title}
       size="sm"
       footer={footer}
-      className={`alert-modal alert-modal--${type}`}
     >
-      <p className="alert-modal__message">{message}</p>
+      <p className={`text-slate-700 ${typeColors[type]}`}>{message}</p>
     </Modal>
   );
 };

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faLock, faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { accountsApi, validateEmail, validatePassword, validatePhoneNumber } from "../../services/accountsApi";
 import { showToast } from "../../store/actions/storeActions";
 import Button from "../UI/Button/Button";
+import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
 
 interface UserProfile {
@@ -201,135 +204,176 @@ const PersonalDetails: React.FC<PersonalDetailsProps> = ({ userProfile, onProfil
   };
 
   const getPasswordStrengthColor = (isValid: boolean) => {
-    return isValid ? "#10b981" : "#ef4444";
+    return isValid ? "text-green-600" : "text-red-600";
   };
 
   const getFieldClass = (fieldName: string) => {
     const hasError = errors[fieldName];
-    const isValid = formData[fieldName as keyof FormData] && !hasError;
-    return `form-input ${hasError ? 'error' : ''} ${isValid ? 'success' : ''}`;
+    const baseClass = "w-full rounded-lg border px-4 py-2 text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600/20";
+    if (hasError) {
+      return `${baseClass} border-red-300 focus:border-red-500`;
+    }
+    if (formData[fieldName as keyof FormData] && !hasError) {
+      return `${baseClass} border-green-300 focus:border-green-500`;
+    }
+    return `${baseClass} border-slate-300 focus:border-blue-600`;
   };
 
   return (
-    <div>
-      <h2 className="section-title">Personal Details</h2>
+    <div className="space-y-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-slate-900">Personal Details</h2>
+        <p className="mt-1 text-slate-600">Manage your personal information and account settings</p>
+      </div>
       
-      <form onSubmit={handleSubmit} className="profile-form">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="first_name" className="form-label">First Name *</label>
-            <input
-              type="text"
-              id="first_name"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleInputChange}
-              className={getFieldClass("first_name")}
-              required
-            />
-            {errors.first_name && <div className="field-error">{errors.first_name}</div>}
+        <Card className="p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900">
+            <FontAwesomeIcon icon={faUser} className="text-blue-600" />
+            Basic Information
+          </h3>
+          
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="first_name" className="mb-2 block text-sm font-medium text-slate-700">
+                First Name *
+              </label>
+              <input
+                type="text"
+                id="first_name"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleInputChange}
+                className={getFieldClass("first_name")}
+                required
+              />
+              {errors.first_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="last_name" className="mb-2 block text-sm font-medium text-slate-700">
+                Last Name *
+              </label>
+              <input
+                type="text"
+                id="last_name"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleInputChange}
+                className={getFieldClass("last_name")}
+                required
+              />
+              {errors.last_name && (
+                <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
+              )}
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="last_name" className="form-label">Last Name *</label>
-            <input
-              type="text"
-              id="last_name"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleInputChange}
-              className={getFieldClass("last_name")}
-              required
-            />
-            {errors.last_name && <div className="field-error">{errors.last_name}</div>}
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
+                Email Address *
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className={`${getFieldClass("email")} bg-slate-50 cursor-not-allowed`}
+                disabled
+                title="Email cannot be changed. Contact support if needed."
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
+              <p className="mt-1 text-xs text-slate-500">
+                Email cannot be changed. Contact support if needed.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="phone_number" className="mb-2 block text-sm font-medium text-slate-700">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone_number"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleInputChange}
+                className={getFieldClass("phone_number")}
+                placeholder="+1 (555) 123-4567"
+              />
+              {errors.phone_number && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone_number}</p>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">Email Address *</label>
+          <div className="mt-6">
+            <label htmlFor="date_of_birth" className="mb-2 block text-sm font-medium text-slate-700">
+              Date of Birth
+            </label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="date"
+              id="date_of_birth"
+              name="date_of_birth"
+              value={formData.date_of_birth}
               onChange={handleInputChange}
-              className={getFieldClass("email")}
-              disabled
-              title="Email cannot be changed. Contact support if needed."
+              className={getFieldClass("date_of_birth")}
+              max={new Date().toISOString().split('T')[0]}
             />
-            {errors.email && <div className="field-error">{errors.email}</div>}
-            <small style={{ color: "#64748b", fontSize: "0.875rem" }}>
-              Email cannot be changed. Contact support if needed.
-            </small>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="phone_number" className="form-label">Phone Number</label>
-            <input
-              type="tel"
-              id="phone_number"
-              name="phone_number"
-              value={formData.phone_number}
+          <div className="mt-6">
+            <label htmlFor="bio" className="mb-2 block text-sm font-medium text-slate-700">
+              Bio
+            </label>
+            <textarea
+              id="bio"
+              name="bio"
+              value={formData.bio}
               onChange={handleInputChange}
-              className={getFieldClass("phone_number")}
-              placeholder="+1 (555) 123-4567"
+              className={getFieldClass("bio")}
+              rows={4}
+              placeholder="Tell us a bit about yourself..."
+              maxLength={500}
             />
-            {errors.phone_number && <div className="field-error">{errors.phone_number}</div>}
+            <p className="mt-1 text-xs text-slate-500">
+              {formData.bio.length}/500 characters
+            </p>
           </div>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="date_of_birth" className="form-label">Date of Birth</label>
-          <input
-            type="date"
-            id="date_of_birth"
-            name="date_of_birth"
-            value={formData.date_of_birth}
-            onChange={handleInputChange}
-            className={getFieldClass("date_of_birth")}
-            max={new Date().toISOString().split('T')[0]}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="bio" className="form-label">Bio</label>
-          <textarea
-            id="bio"
-            name="bio"
-            value={formData.bio}
-            onChange={handleInputChange}
-            className={getFieldClass("bio")}
-            rows={4}
-            placeholder="Tell us a bit about yourself..."
-            maxLength={500}
-          />
-          <small style={{ color: "#64748b", fontSize: "0.875rem" }}>
-            {formData.bio.length}/500 characters
-          </small>
-        </div>
+        </Card>
 
         {/* Password Change Section */}
-        <div className="settings-section">
-          <div className="setting-item">
-            <div className="setting-info">
-              <h4>Change Password</h4>
-              <p>Update your account password for better security</p>
+        <Card className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                <FontAwesomeIcon icon={faLock} className="text-blue-600" />
+                Change Password
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">Update your account password for better security</p>
             </div>
-            <button
+            <Button
               type="button"
+              variant={showPasswordFields ? "outline" : "primary"}
               onClick={() => setShowPasswordFields(!showPasswordFields)}
-              className="btn-secondary"
             >
               {showPasswordFields ? "Cancel" : "Change Password"}
-            </button>
+            </Button>
           </div>
 
           {showPasswordFields && (
-            <div className="form-row" style={{ marginTop: "1rem" }}>
-              <div className="form-group">
-                <label htmlFor="current_password" className="form-label">Current Password *</label>
+            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div>
+                <label htmlFor="current_password" className="mb-2 block text-sm font-medium text-slate-700">
+                  Current Password *
+                </label>
                 <input
                   type="password"
                   id="current_password"
@@ -339,11 +383,15 @@ const PersonalDetails: React.FC<PersonalDetailsProps> = ({ userProfile, onProfil
                   className={getFieldClass("current_password")}
                   required={showPasswordFields}
                 />
-                {errors.current_password && <div className="field-error">{errors.current_password}</div>}
+                {errors.current_password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.current_password}</p>
+                )}
               </div>
 
-              <div className="form-group">
-                <label htmlFor="new_password" className="form-label">New Password *</label>
+              <div>
+                <label htmlFor="new_password" className="mb-2 block text-sm font-medium text-slate-700">
+                  New Password *
+                </label>
                 <input
                   type="password"
                   id="new_password"
@@ -353,32 +401,41 @@ const PersonalDetails: React.FC<PersonalDetailsProps> = ({ userProfile, onProfil
                   className={getFieldClass("new_password")}
                   required={showPasswordFields}
                 />
-                {errors.new_password && <div className="field-error">{errors.new_password}</div>}
+                {errors.new_password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.new_password}</p>
+                )}
                 
                 {formData.new_password && (
-                  <div style={{ marginTop: "0.5rem", fontSize: "0.875rem" }}>
-                    <div style={{ marginBottom: "0.25rem", fontWeight: "500" }}>Password Requirements:</div>
-                    <div style={{ color: getPasswordStrengthColor(passwordStrength.minLength) }}>
-                      ✓ At least 8 characters
+                  <div className="mt-3 space-y-1 text-xs">
+                    <p className="font-medium text-slate-700">Password Requirements:</p>
+                    <div className={`flex items-center gap-2 ${getPasswordStrengthColor(passwordStrength.minLength)}`}>
+                      <FontAwesomeIcon icon={passwordStrength.minLength ? faCheckCircle : faTimesCircle} className="text-xs" />
+                      <span>At least 8 characters</span>
                     </div>
-                    <div style={{ color: getPasswordStrengthColor(passwordStrength.hasUpper) }}>
-                      ✓ One uppercase letter
+                    <div className={`flex items-center gap-2 ${getPasswordStrengthColor(passwordStrength.hasUpper)}`}>
+                      <FontAwesomeIcon icon={passwordStrength.hasUpper ? faCheckCircle : faTimesCircle} className="text-xs" />
+                      <span>One uppercase letter</span>
                     </div>
-                    <div style={{ color: getPasswordStrengthColor(passwordStrength.hasLower) }}>
-                      ✓ One lowercase letter
+                    <div className={`flex items-center gap-2 ${getPasswordStrengthColor(passwordStrength.hasLower)}`}>
+                      <FontAwesomeIcon icon={passwordStrength.hasLower ? faCheckCircle : faTimesCircle} className="text-xs" />
+                      <span>One lowercase letter</span>
                     </div>
-                    <div style={{ color: getPasswordStrengthColor(passwordStrength.hasNumber) }}>
-                      ✓ One number
+                    <div className={`flex items-center gap-2 ${getPasswordStrengthColor(passwordStrength.hasNumber)}`}>
+                      <FontAwesomeIcon icon={passwordStrength.hasNumber ? faCheckCircle : faTimesCircle} className="text-xs" />
+                      <span>One number</span>
                     </div>
-                    <div style={{ color: getPasswordStrengthColor(passwordStrength.hasSpecial) }}>
-                      ✓ One special character
+                    <div className={`flex items-center gap-2 ${getPasswordStrengthColor(passwordStrength.hasSpecial)}`}>
+                      <FontAwesomeIcon icon={passwordStrength.hasSpecial ? faCheckCircle : faTimesCircle} className="text-xs" />
+                      <span>One special character</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="form-group">
-                <label htmlFor="confirm_password" className="form-label">Confirm New Password *</label>
+              <div>
+                <label htmlFor="confirm_password" className="mb-2 block text-sm font-medium text-slate-700">
+                  Confirm New Password *
+                </label>
                 <input
                   type="password"
                   id="confirm_password"
@@ -388,19 +445,21 @@ const PersonalDetails: React.FC<PersonalDetailsProps> = ({ userProfile, onProfil
                   className={getFieldClass("confirm_password")}
                   required={showPasswordFields}
                 />
-                {errors.confirm_password && <div className="field-error">{errors.confirm_password}</div>}
+                {errors.confirm_password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirm_password}</p>
+                )}
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Form Actions */}
-        <div className="form-actions">
+        <div className="flex justify-end">
           <Button
             type="submit"
             variant="primary"
             disabled={loading}
-            className="btn-primary"
+            className="min-w-[150px]"
           >
             {loading ? <Loading size="sm" /> : "Save Changes"}
           </Button>

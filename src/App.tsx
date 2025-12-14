@@ -1,13 +1,10 @@
 /// <reference types="vite/client" />
 import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
-import { connect, ConnectedProps } from "react-redux";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { connect, ConnectedProps, useSelector } from "react-redux";
 import { authCheckState } from "./store/actions/authActions";
 import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
-
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./css/App.css";
-import "./styles/globals.css";
+import { accountsApi } from "./services/accountsApi";
 
 import ToastProvider from "./components/UI/Toast/ToastProvider";
 import Navbar from "./components/Misc/Navbar";
@@ -25,6 +22,10 @@ import HomePage from "./components/Home/HomePage";
 import Wishlist from "./components/Wishlist/Wishlist";
 import PriceAlerts from "./components/PriceAlerts/PriceAlerts";
 import ProductComparison from "./components/Products/ProductComparison";
+import SwapPage from "./components/Swap/SwapPage";
+import SwapDashboard from "./components/Swap/SwapDashboard";
+import AdminDashboard from "./components/Admin/AdminDashboard";
+import AdminRoute from "./components/Utilities/AdminRoute";
 
 import Cart from "./components/Checkout/Cart";
 import Checkout from "./components/Checkout/Checkout";
@@ -37,12 +38,11 @@ import Register from "./components/Authentication/Register";
 import PasswordReset from "./components/Authentication/PasswordReset";
 import ChangePassword from "./components/Authentication/ChangePassword";
 
-import { Container } from "react-bootstrap";
-
 // Stripe (new way)
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = stripeKey ? loadStripe(stripeKey) : Promise.resolve(null);
 
 // FontAwesome icons
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -75,6 +75,8 @@ import {
   faLinkedin,
   faPinterest,
 } from "@fortawesome/free-brands-svg-icons";
+import Orders from "./components/Orders/Orders";
+import Profile from "./components/Profiles/Profile";
 
 library.add(
   faFacebookF,
@@ -102,6 +104,21 @@ library.add(
   faAngleRight
 );
 
+// Layout component for regular pages
+const RegularLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <>
+      <Navbar />
+      <main className="pt-[130px]">
+        <div className="mx-auto max-w-6xl px-4 pb-12 pt-6">
+          {children}
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+};
+
 // Redux connector
 const mapDispatch = {
   authCheckState,
@@ -111,58 +128,264 @@ const connector = connect(null, mapDispatch);
 type PropsFromRedux = ConnectedProps<typeof connector>;
 
 const App: React.FC<PropsFromRedux> = ({ authCheckState }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const token = useSelector((state: any) => state.auth.token);
+
   useEffect(() => {
     // Setup axios interceptors for JWT token handling
     setupAxiosInterceptors();
-    
+
     // Check authentication state on app load
     authCheckState();
   }, [authCheckState]);
 
+  // Redirect admins to admin dashboard if they're on regular pages (but not if already on admin page)
+  useEffect(() => {
+    // Skip redirect check if already on admin page or auth pages
+    const isAuthPage = location.pathname.startsWith('/login') || 
+                      location.pathname.startsWith('/register') ||
+                      location.pathname.startsWith('/password_reset');
+    const isAdminPage = location.pathname.startsWith('/admin');
+    
+    if (isAdminPage || isAuthPage) {
+      return; // Don't redirect if already on admin or auth pages
+    }
+
+    const redirectAdminIfNeeded = async () => {
+      // Check both Redux state and localStorage for token
+      const hasToken = token || localStorage.getItem('accessToken') || localStorage.getItem('token');
+      
+      if (hasToken) {
+        try {
+          const user = await accountsApi.getUserProfile();
+          const isAdmin = (user as any).is_staff || (user as any).is_superuser;
+          
+          if (isAdmin) {
+            // Redirect admin to admin dashboard immediately
+            navigate("/admin", { replace: true });
+          }
+        } catch (error) {
+          // Silently fail - user might not be fully authenticated yet
+          console.log('Could not check admin status for redirect:', error);
+        }
+      }
+    };
+
+    // Only check once after a short delay to avoid loops
+    const timer = setTimeout(() => {
+      redirectAdminIfNeeded();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [token, location.pathname, navigate]);
+
   return (
-    <ToastProvider position="top-right" maxToasts={5}>
-      <Elements stripe={stripePromise}>
-        <ScrollToTop>
-          <Navbar />
-          <Container className="content my-4">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <ToastProvider position="top-right" maxToasts={5}>
+        <Elements stripe={stripePromise}>
+          <ScrollToTop>
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/products" element={<ProductList />} />
-              <Route path="/category/:categorySlug" element={<CategoryProducts />} />
-              <Route path="/category/:categorySlug/brands" element={<CategoryBrands />} />
-              <Route path="/brand/:brandSlug" element={<BrandProducts />} />
-              <Route path="/brand/:brandSlug/category/:categorySlug" element={<BrandProducts />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/password_reset" element={<PasswordReset />} />
-              <Route path="/password_reset/:uid/:token" element={<PasswordReset />} />
-              <Route path="/change_password" element={
-                <PrivateRoute>
-                  <ChangePassword />
-                </PrivateRoute>
-              } />
-              <Route path="/product/:slug" element={<ProductDetails />} />
-              <Route path="/search/:query" element={<SearchResults />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/price-alerts" element={<PriceAlerts />} />
-              <Route path="/compare" element={<ProductComparison />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/about" element={<About />} />
+              {/* Admin routes - render without Navbar/Footer */}
               <Route
-                path="/checkout"
+                path="/admin/*"
+                element={
+                  <AdminRoute>
+                    <AdminDashboard />
+                  </AdminRoute>
+                }
+              />
+              
+              {/* Regular routes - render with Navbar/Footer */}
+              <Route
+                path="/"
+                element={
+                  <RegularLayout>
+                    <HomePage />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/products"
+                element={
+                  <RegularLayout>
+                    <ProductList />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/profile/*"
+                element={
+                  <RegularLayout>
+                    <PrivateRoute>
+                      <Profile />
+                    </PrivateRoute>
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/orders"
+                element={
+                  <RegularLayout>
+                    <PrivateRoute>
+                      <Orders />
+                    </PrivateRoute>
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/category/:categorySlug"
+                element={
+                  <RegularLayout>
+                    <CategoryProducts />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/category/:categorySlug/brands"
+                element={
+                  <RegularLayout>
+                    <CategoryBrands />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/brand/:brandSlug"
+                element={
+                  <RegularLayout>
+                    <BrandProducts />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/brand/:brandSlug/category/:categorySlug"
+                element={
+                  <RegularLayout>
+                    <BrandProducts />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/login"
+                element={<Login />}
+              />
+              <Route
+                path="/register"
+                element={<Register />}
+              />
+              <Route
+                path="/password_reset"
+                element={<PasswordReset />}
+              />
+              <Route
+                path="/password_reset/:uid/:token"
+                element={<PasswordReset />}
+              />
+              <Route
+                path="/change_password"
                 element={
                   <PrivateRoute>
-                    <Checkout />
+                    <ChangePassword />
                   </PrivateRoute>
                 }
               />
-              <Route path="*" element={<Default />} />
+              <Route
+                path="/product/:slug"
+                element={
+                  <RegularLayout>
+                    <ProductDetails />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/search/:query"
+                element={
+                  <RegularLayout>
+                    <SearchResults />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/wishlist"
+                element={
+                  <RegularLayout>
+                    <Wishlist />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/price-alerts"
+                element={
+                  <RegularLayout>
+                    <PriceAlerts />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/compare"
+                element={
+                  <RegularLayout>
+                    <ProductComparison />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/swap"
+                element={
+                  <RegularLayout>
+                    <SwapPage />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/account/swaps"
+                element={
+                  <RegularLayout>
+                    <PrivateRoute>
+                      <SwapDashboard />
+                    </PrivateRoute>
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/cart"
+                element={
+                  <RegularLayout>
+                    <Cart />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/about"
+                element={
+                  <RegularLayout>
+                    <About />
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="/checkout"
+                element={
+                  <RegularLayout>
+                    <PrivateRoute>
+                      <Checkout />
+                    </PrivateRoute>
+                  </RegularLayout>
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <RegularLayout>
+                    <Default />
+                  </RegularLayout>
+                }
+              />
             </Routes>
-          </Container>
-          <Footer />
-        </ScrollToTop>
-      </Elements>
-    </ToastProvider>
+          </ScrollToTop>
+        </Elements>
+      </ToastProvider>
+    </div>
   );
 };
 

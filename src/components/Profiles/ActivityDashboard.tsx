@@ -21,13 +21,11 @@ import { useToast } from "../UI/Toast/ToastProvider";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
-import LoadingSkeleton from "../UI/Loading/LoadingSkeleton";
 import { 
   activityApi,
   formatRelativeTime 
 } from "../../services/accountsApi";
 import type { ActivityLog, ActivitySummary } from "../../services/accountsApi";
-import "./css/ActivityDashboard.css";
 
 interface ActivityFilters {
   activity_type?: string;
@@ -219,102 +217,95 @@ const ActivityDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="activity-dashboard">
-        <div className="dashboard-header">
-          <LoadingSkeleton height={60} width="100%" />
-        </div>
-        <div className="dashboard-stats">
+      <div className="space-y-6">
+        <div className="h-20 animate-pulse rounded-lg bg-slate-200" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
-            <LoadingSkeleton key={i} height={120} width="100%" />
+            <div key={i} className="h-32 animate-pulse rounded-lg bg-slate-200" />
           ))}
         </div>
-        <div className="dashboard-content">
-          <LoadingSkeleton height={400} width="100%" />
-        </div>
+        <div className="h-96 animate-pulse rounded-lg bg-slate-200" />
       </div>
     );
   }
 
   return (
-    <div className="activity-dashboard">
+    <div className="space-y-6">
       {/* Dashboard Header */}
-      <div className="dashboard-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h1>
-              <FontAwesomeIcon icon={faChartBar} />
-              Activity Dashboard
-            </h1>
-            <p>Track your shopping behavior and account activity</p>
-          </div>
-          <div className="header-actions">
-            <Button
-              variant="secondary"
-              onClick={refreshData}
-              disabled={activitiesLoading}
-              icon={faRefresh}
-              className={activitiesLoading ? 'spinning' : ''}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="primary"
-              onClick={exportActivities}
-              icon={faDownload}
-            >
-              Export
-            </Button>
-          </div>
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div>
+          <h2 className="flex items-center gap-2 text-2xl font-bold text-slate-900">
+            <FontAwesomeIcon icon={faChartBar} className="text-blue-600" />
+            Activity Dashboard
+          </h2>
+          <p className="mt-1 text-slate-600">Track your shopping behavior and account activity</p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={refreshData}
+            disabled={activitiesLoading}
+            icon={faRefresh}
+          >
+            Refresh
+          </Button>
+          <Button
+            variant="primary"
+            onClick={exportActivities}
+            icon={faDownload}
+          >
+            Export
+          </Button>
         </div>
       </div>
 
       {/* Activity Summary Stats */}
       {summary && (
-        <div className="dashboard-stats">
-          <Card className="stat-card" padding="lg">
-            <div className="stat-content">
-              <div className="stat-icon" style={{ backgroundColor: getStatColor('Total Activities') }}>
-                <FontAwesomeIcon icon={faChartBar} />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg text-white" style={{ backgroundColor: getStatColor('Total Activities') }}>
+                <FontAwesomeIcon icon={faChartBar} className="text-xl" />
               </div>
-              <div className="stat-details">
-                <div className="stat-number">{summary.total_activities}</div>
-                <div className="stat-label">Total Activities</div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="stat-card" padding="lg">
-            <div className="stat-content">
-              <div className="stat-icon" style={{ backgroundColor: getStatColor('Products Viewed') }}>
-                <FontAwesomeIcon icon={faEye} />
-              </div>
-              <div className="stat-details">
-                <div className="stat-number">{summary.activity_counts.product_view || 0}</div>
-                <div className="stat-label">Products Viewed</div>
+              <div>
+                <div className="text-2xl font-bold text-slate-900">{summary.total_activities}</div>
+                <div className="text-sm text-slate-600">Total Activities</div>
               </div>
             </div>
           </Card>
 
-          <Card className="stat-card" padding="lg">
-            <div className="stat-content">
-              <div className="stat-icon" style={{ backgroundColor: getStatColor('Orders Placed') }}>
-                <FontAwesomeIcon icon={faShoppingBag} />
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg text-white" style={{ backgroundColor: getStatColor('Products Viewed') }}>
+                <FontAwesomeIcon icon={faEye} className="text-xl" />
               </div>
-              <div className="stat-details">
-                <div className="stat-number">{summary.activity_counts.order_placed || 0}</div>
-                <div className="stat-label">Orders Placed</div>
+              <div>
+                <div className="text-2xl font-bold text-slate-900">{summary.activity_counts.product_view || 0}</div>
+                <div className="text-sm text-slate-600">Products Viewed</div>
               </div>
             </div>
           </Card>
 
-          <Card className="stat-card" padding="lg">
-            <div className="stat-content">
-              <div className="stat-icon" style={{ backgroundColor: getStatColor('Reviews Added') }}>
-                <FontAwesomeIcon icon={faStar} />
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg text-white" style={{ backgroundColor: getStatColor('Orders Placed') }}>
+                <FontAwesomeIcon icon={faShoppingBag} className="text-xl" />
               </div>
-              <div className="stat-details">
-                <div className="stat-number">{summary.activity_counts.review_added || 0}</div>
-                <div className="stat-label">Reviews Added</div>
+              <div>
+                <div className="text-2xl font-bold text-slate-900">{summary.activity_counts.order_placed || 0}</div>
+                <div className="text-sm text-slate-600">Orders Placed</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg text-white" style={{ backgroundColor: getStatColor('Reviews Added') }}>
+                <FontAwesomeIcon icon={faStar} className="text-xl" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-slate-900">{summary.activity_counts.review_added || 0}</div>
+                <div className="text-sm text-slate-600">Reviews Added</div>
               </div>
             </div>
           </Card>
@@ -323,18 +314,18 @@ const ActivityDashboard: React.FC = () => {
 
       {/* Most Viewed Categories */}
       {summary?.most_viewed_categories && summary.most_viewed_categories.length > 0 && (
-        <Card className="categories-card" padding="lg">
-          <div className="categories-header">
-            <h3>
-              <FontAwesomeIcon icon={faArrowUp} />
-              Most Viewed Categories
-            </h3>
-          </div>
-          <div className="categories-list">
+        <Card className="p-6">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-slate-900">
+            <FontAwesomeIcon icon={faArrowUp} className="text-blue-600" />
+            Most Viewed Categories
+          </h3>
+          <div className="space-y-2">
             {summary.most_viewed_categories.map((category, index) => (
-              <div key={category} className="category-item">
-                <div className="category-rank">#{index + 1}</div>
-                <div className="category-name">{category}</div>
+              <div key={category} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-bold text-white">
+                  #{index + 1}
+                </div>
+                <div className="font-medium text-slate-900">{category}</div>
               </div>
             ))}
           </div>
@@ -342,39 +333,39 @@ const ActivityDashboard: React.FC = () => {
       )}
 
       {/* Filters and Search */}
-      <Card className="filters-card" padding="md">
-        <div className="filters-header">
+      <Card className="p-6">
+        <div className="mb-4 flex items-center justify-between">
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={() => setShowFilters(!showFilters)}
             icon={faFilter}
           >
             {showFilters ? 'Hide Filters' : 'Show Filters'}
           </Button>
-          <div className="results-count">
+          <div className="text-sm text-slate-600">
             {filteredActivities.length} of {activities.length} activities
           </div>
         </div>
 
         {showFilters && (
-          <div className="filters-content">
-            <div className="filter-group">
-              <label>Search Activities</label>
+          <div className="grid grid-cols-1 gap-4 border-t border-slate-200 pt-4 md:grid-cols-3">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Search Activities</label>
               <input
                 type="text"
                 placeholder="Search descriptions..."
                 value={filters.search || ''}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="filter-input"
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               />
             </div>
 
-            <div className="filter-group">
-              <label>Activity Type</label>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Activity Type</label>
               <select
                 value={filters.activity_type || 'all'}
                 onChange={(e) => handleFilterChange('activity_type', e.target.value)}
-                className="filter-select"
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               >
                 <option value="all">All Types</option>
                 <option value="product_view">Product Views</option>
@@ -388,12 +379,12 @@ const ActivityDashboard: React.FC = () => {
               </select>
             </div>
 
-            <div className="filter-group">
-              <label>Time Range</label>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">Time Range</label>
               <select
                 value={selectedTimeRange}
                 onChange={(e) => setSelectedTimeRange(e.target.value)}
-                className="filter-select"
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -406,10 +397,10 @@ const ActivityDashboard: React.FC = () => {
       </Card>
 
       {/* Activity List */}
-      <Card className="activities-card" padding="lg">
-        <div className="activities-header">
-          <h3>
-            <FontAwesomeIcon icon={faCalendarAlt} />
+      <Card className="p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+            <FontAwesomeIcon icon={faCalendarAlt} className="text-blue-600" />
             Recent Activities
           </h3>
           {activitiesLoading && (
@@ -418,46 +409,47 @@ const ActivityDashboard: React.FC = () => {
         </div>
 
         {filteredActivities.length === 0 ? (
-          <div className="no-activities">
-            <FontAwesomeIcon icon={faChartBar} />
-            <h4>No Activities Found</h4>
-            <p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+              <FontAwesomeIcon icon={faChartBar} className="text-3xl text-slate-400" />
+            </div>
+            <h4 className="mb-2 text-lg font-semibold text-slate-900">No Activities Found</h4>
+            <p className="text-slate-600">
               {activities.length === 0 
                 ? "You haven't performed any activities yet." 
                 : "No activities match your current filters."}
             </p>
           </div>
         ) : (
-          <div className="activities-list">
+          <div className="space-y-4">
             {filteredActivities.map((activity) => (
-              <div key={activity.id} className="activity-item">
+              <div key={activity.id} className="flex items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
                 <div 
-                  className="activity-icon"
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-white"
                   style={{ backgroundColor: getActivityColor(activity.activity_type) }}
                 >
                   <FontAwesomeIcon icon={getActivityIcon(activity.activity_type)} />
                 </div>
                 
-                <div className="activity-content">
-                  <div className="activity-description">
+                <div className="flex-1">
+                  <div className="font-medium text-slate-900">
                     {activity.description}
                   </div>
-                  <div className="activity-meta">
-                    <span className="activity-type">{activity.activity_type.replace('_', ' ')}</span>
-                    <span className="activity-time">
-                      {formatRelativeTime(activity.created_at)}
-                    </span>
+                  <div className="mt-1 flex items-center gap-3 text-sm text-slate-600">
+                    <span className="capitalize">{activity.activity_type.replace('_', ' ')}</span>
+                    <span>•</span>
+                    <span>{formatRelativeTime(activity.created_at)}</span>
                   </div>
                   
                   {activity.metadata && Object.keys(activity.metadata).length > 0 && (
-                    <div className="activity-metadata">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {activity.metadata.product_name && (
-                        <span className="metadata-item">
+                        <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800">
                           Product: {activity.metadata.product_name}
                         </span>
                       )}
                       {activity.metadata.category && (
-                        <span className="metadata-item">
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
                           Category: {activity.metadata.category}
                         </span>
                       )}

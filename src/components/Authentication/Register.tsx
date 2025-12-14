@@ -2,24 +2,25 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faUser, 
-  faEnvelope, 
-  faLock, 
-  faEye, 
+import {
+  faUser,
+  faEnvelope,
+  faLock,
+  faEye,
   faEyeSlash,
   faCheckCircle,
   faExclamationCircle,
-  faUserPlus
+  faUserPlus,
+  faUserCheck
 } from "@fortawesome/free-solid-svg-icons";
 import { authClearErrors, authSignup } from "../../store/actions/authActions";
 import { useToast } from "../UI/Toast/ToastProvider";
 import Button from "../UI/Button/Button";
 import Card from "../UI/Card/Card";
 import Loading from "../UI/Loading/Loading";
+import SuccessModal from "./SuccessModal"; // Import the success modal
 import { validateEmail, validatePassword } from "../../services/accountsApi";
 import type { AppDispatch } from "../../store/store";
-import "./css/Register.css";
 
 interface PasswordStrength {
   minLength: boolean;
@@ -75,6 +76,7 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     dispatch(authClearErrors());
@@ -82,14 +84,17 @@ const Register: React.FC = () => {
 
   useEffect(() => {
     if (token) {
-      showToast({
-        type: 'success',
-        title: 'Registration Successful!',
-        message: 'Welcome to our platform. Your account has been created successfully.'
-      });
-      navigate("/", { replace: true });
+      // Show success modal instead of toast
+      setShowSuccessModal(true);
     }
-  }, [token, navigate, showToast]);
+  }, [token]);
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+
+    // Navigate after modal closes
+    navigate("/", { replace: true });
+  };
 
   const validateField = (name: string, value: string) => {
     const newValidation = { ...validation };
@@ -127,22 +132,22 @@ const Register: React.FC = () => {
 
       case 'password1':
         if (!value) {
-          newValidation.password1 = { 
-            valid: false, 
-            message: 'Password is required', 
+          newValidation.password1 = {
+            valid: false,
+            message: 'Password is required',
             strength: { minLength: false, hasUpper: false, hasLower: false, hasNumber: false, hasSpecial: false }
           };
         } else {
           const passwordCheck = validatePassword(value);
           if (!passwordCheck.valid) {
-            newValidation.password1 = { 
-              valid: false, 
+            newValidation.password1 = {
+              valid: false,
               message: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
               strength: convertPasswordStrength(passwordCheck.strength)
             };
           } else {
-            newValidation.password1 = { 
-              valid: true, 
+            newValidation.password1 = {
+              valid: true,
               message: 'Strong password!',
               strength: convertPasswordStrength(passwordCheck.strength)
             };
@@ -172,12 +177,12 @@ const Register: React.FC = () => {
 
   const isFormValid = () => {
     return Object.values(validation).every(field => field.valid) &&
-           Object.values(form).every(value => value.trim() !== '');
+      Object.values(form).every(value => value.trim() !== '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isFormValid()) {
       showToast({
         type: 'error',
@@ -188,7 +193,7 @@ const Register: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await dispatch(authSignup(
         form.email,
@@ -221,13 +226,13 @@ const Register: React.FC = () => {
     ];
 
     return (
-      <div className="password-strength">
-        <div className="password-requirements">
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div className="space-y-2">
           {requirements.map(req => (
-            <div key={req.key} className={`requirement ${req.met ? 'met' : 'unmet'}`}>
-              <FontAwesomeIcon 
-                icon={req.met ? faCheckCircle : faExclamationCircle} 
-                className={req.met ? 'text-success' : 'text-danger'}
+            <div key={req.key} className={`flex items-center gap-2 text-sm ${req.met ? 'text-green-700' : 'text-slate-600'}`}>
+              <FontAwesomeIcon
+                icon={req.met ? faCheckCircle : faExclamationCircle}
+                className={req.met ? 'text-green-600' : 'text-slate-400'}
               />
               <span>{req.label}</span>
             </div>
@@ -241,7 +246,7 @@ const Register: React.FC = () => {
     const field = validation[fieldName];
     if (!field.valid && field.message) {
       return (
-        <div className="field-error">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border-l-4 border-red-500 bg-red-50 px-3 py-2 text-sm text-red-700">
           <FontAwesomeIcon icon={faExclamationCircle} />
           <span>{field.message}</span>
         </div>
@@ -249,7 +254,7 @@ const Register: React.FC = () => {
     }
     if (field.valid && field.message && fieldName !== 'password1') {
       return (
-        <div className="field-success">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border-l-4 border-green-500 bg-green-50 px-3 py-2 text-sm text-green-700">
           <FontAwesomeIcon icon={faCheckCircle} />
           <span>{field.message}</span>
         </div>
@@ -260,30 +265,33 @@ const Register: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="register-container">
+      <div className="flex min-h-screen items-center justify-center bg-blue-50 p-4">
         <Loading variant="spinner" size="lg" text="Creating your account..." />
       </div>
     );
   }
 
   return (
-    <div className="register-container">
-      <div className="register-content">
-        <Card className="register-card" padding="xl">
-          <div className="register-header">
-            <div className="register-icon">
-              <FontAwesomeIcon icon={faUserPlus} />
+    <div className="flex min-h-screen items-center justify-center bg-blue-50 p-4 py-8">
+      <div className="relative z-10 w-full max-w-2xl">
+        <Card className="rounded-2xl border border-slate-200 bg-white shadow-md" padding="xl">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-500 shadow-md transition-transform hover:scale-110 hover:shadow-lg">
+              <FontAwesomeIcon icon={faUserPlus} className="text-2xl text-white" />
             </div>
-            <h1>Create Account</h1>
-            <p>Join our community and start shopping today</p>
+            <h1 className="mb-2 bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-3xl font-bold text-transparent">
+              Create Account
+            </h1>
+            <p className="text-slate-600">Join our community and start shopping today</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="register-form">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             {/* Name Fields Row */}
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="first_name">
-                  <FontAwesomeIcon icon={faUser} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col">
+                <label htmlFor="first_name" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FontAwesomeIcon icon={faUser} className="text-blue-600" />
                   First Name
                 </label>
                 <input
@@ -292,16 +300,24 @@ const Register: React.FC = () => {
                   type="text"
                   value={form.first_name}
                   onChange={handleChange}
-                  className={`form-input ${!validation.first_name.valid ? 'error' : validation.first_name.valid && form.first_name ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.first_name.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.first_name.valid && form.first_name 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Enter your first name"
                   required
                 />
                 {renderFieldError('first_name')}
               </div>
 
-              <div className="form-group">
-                <label htmlFor="last_name">
-                  <FontAwesomeIcon icon={faUser} />
+              <div className="flex flex-col">
+                <label htmlFor="last_name" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <FontAwesomeIcon icon={faUser} className="text-blue-600" />
                   Last Name
                 </label>
                 <input
@@ -310,7 +326,15 @@ const Register: React.FC = () => {
                   type="text"
                   value={form.last_name}
                   onChange={handleChange}
-                  className={`form-input ${!validation.last_name.valid ? 'error' : validation.last_name.valid && form.last_name ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.last_name.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.last_name.valid && form.last_name 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Enter your last name"
                   required
                 />
@@ -319,9 +343,9 @@ const Register: React.FC = () => {
             </div>
 
             {/* Email Field */}
-            <div className="form-group">
-              <label htmlFor="email">
-                <FontAwesomeIcon icon={faEnvelope} />
+            <div className="flex flex-col">
+              <label htmlFor="email" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <FontAwesomeIcon icon={faEnvelope} className="text-blue-600" />
                 Email Address
               </label>
               <input
@@ -330,7 +354,15 @@ const Register: React.FC = () => {
                 type="email"
                 value={form.email}
                 onChange={handleChange}
-                className={`form-input ${!validation.email.valid ? 'error' : validation.email.valid && form.email ? 'success' : ''}`}
+                className={`
+                  w-full rounded-lg border px-4 py-3 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                  ${!validation.email.valid 
+                    ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                    : validation.email.valid && form.email 
+                      ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                      : 'border-slate-300 bg-white'
+                  }
+                `}
                 placeholder="Enter your email address"
                 required
               />
@@ -338,25 +370,33 @@ const Register: React.FC = () => {
             </div>
 
             {/* Password Field */}
-            <div className="form-group">
-              <label htmlFor="password1">
-                <FontAwesomeIcon icon={faLock} />
+            <div className="flex flex-col">
+              <label htmlFor="password1" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <FontAwesomeIcon icon={faLock} className="text-blue-600" />
                 Password
               </label>
-              <div className="password-input-wrapper">
+              <div className="relative">
                 <input
                   id="password1"
                   name="password1"
                   type={showPassword ? "text" : "password"}
                   value={form.password1}
                   onChange={handleChange}
-                  className={`form-input ${!validation.password1.valid ? 'error' : validation.password1.valid && form.password1 ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 pr-12 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.password1.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.password1.valid && form.password1 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Create a strong password"
                   required
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
@@ -367,25 +407,33 @@ const Register: React.FC = () => {
             </div>
 
             {/* Confirm Password Field */}
-            <div className="form-group">
-              <label htmlFor="password2">
-                <FontAwesomeIcon icon={faLock} />
+            <div className="flex flex-col">
+              <label htmlFor="password2" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <FontAwesomeIcon icon={faLock} className="text-blue-600" />
                 Confirm Password
               </label>
-              <div className="password-input-wrapper">
+              <div className="relative">
                 <input
                   id="password2"
                   name="password2"
                   type={showConfirmPassword ? "text" : "password"}
                   value={form.password2}
                   onChange={handleChange}
-                  className={`form-input ${!validation.password2.valid ? 'error' : validation.password2.valid && form.password2 ? 'success' : ''}`}
+                  className={`
+                    w-full rounded-lg border px-4 py-3 pr-12 text-base transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                    ${!validation.password2.valid 
+                      ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' 
+                      : validation.password2.valid && form.password2 
+                        ? 'border-green-500 bg-green-50 focus:border-green-500 focus:ring-green-500'
+                        : 'border-slate-300 bg-white'
+                    }
+                  `}
                   placeholder="Confirm your password"
                   required
                 />
                 <button
                   type="button"
-                  className="password-toggle"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   <FontAwesomeIcon icon={showConfirmPassword ? faEyeSlash : faEye} />
@@ -396,12 +444,12 @@ const Register: React.FC = () => {
 
             {/* Server Errors */}
             {error && (
-              <div className="server-error">
+              <div className="flex items-center gap-2 rounded-lg border-l-4 border-red-500 bg-red-50 px-4 py-3 text-sm text-red-700">
                 <FontAwesomeIcon icon={faExclamationCircle} />
                 <span>
-                  {error.response?.data?.detail || 
-                   error.response?.data?.non_field_errors?.[0] || 
-                   'Registration failed. Please try again.'}
+                  {error.response?.data?.detail ||
+                    error.response?.data?.non_field_errors?.[0] ||
+                    'Registration failed. Please try again.'}
                 </span>
               </div>
             )}
@@ -414,16 +462,19 @@ const Register: React.FC = () => {
               fullWidth
               disabled={!isFormValid() || isSubmitting}
               icon={faUserPlus}
-              className="register-submit"
+              className="mt-2"
             >
               {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
 
             {/* Login Link */}
-            <div className="register-footer">
-              <p>
+            <div className="mt-6 border-t border-slate-200 pt-6 text-center">
+              <p className="text-sm text-slate-600">
                 Already have an account?{' '}
-                <Link to="/login" className="login-link">
+                <Link 
+                  to="/login" 
+                  className="font-semibold text-blue-600 transition-colors hover:text-blue-700 hover:underline"
+                >
                   Sign in here
                 </Link>
               </p>
@@ -431,6 +482,18 @@ const Register: React.FC = () => {
           </form>
         </Card>
       </div>
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleSuccessModalClose}
+        title="Account Created Successfully!"
+        message={`Welcome to our platform, ${form.first_name}! Your account has been created and you're now ready to start shopping.`}
+        icon={faUserCheck}
+        autoClose={true}
+        autoCloseDelay={3000}
+        confirmText="Continue to Dashboard"
+      />
     </div>
   );
 };

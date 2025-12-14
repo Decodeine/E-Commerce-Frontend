@@ -6,7 +6,6 @@ import {
   toggleCheckoutComplete,
   emptyCart,
 } from "../../store/actions/storeActions";
-import "./css/cart.css";
 import { Row, Col } from "react-bootstrap";
 
 const mapShippingStringToNumeric = (value: string): number => {

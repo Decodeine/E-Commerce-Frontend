@@ -21,7 +21,7 @@ interface AuthAction {
 }
 
 const initialState: AuthState = {
-  token: null,
+  token: localStorage.getItem("token") || localStorage.getItem("accessToken"),
   error: null,
   loading: false
 };

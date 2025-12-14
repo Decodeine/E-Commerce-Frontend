@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faArrowRight, 
-  faShippingFast, 
-  faUndo, 
-  faShieldAlt, 
+import {
+  faArrowRight,
+  faShippingFast,
+  faUndo,
+  faShieldAlt,
   faHeadset,
   faStar,
   faHeart,
@@ -16,24 +16,15 @@ import {
 import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
 import ProductCard from '../Products/ProductCard';
-import CategoryNavigation from '../Products/CategoryNavigation';
 import FeaturedProducts from '../Products/FeaturedProducts';
 import Newsletter from '../Misc/Newsletter';
 import { fetchCategories } from '../../store/actions/storeActions';
 import { AppDispatch } from '../../store/store';
-import './css/HomePage.css';
+import { productsApi } from '../../services/productsApi';
 
-interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  price: number;
-  sale_price?: number;
-  image?: string;
-  rating?: number;
-  reviews_count?: number;
-  in_stock?: boolean;
-}
+// Use the Product type from productsApi
+import type { Product } from '../../services/productsApi';
+
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -46,43 +37,20 @@ const HomePage: React.FC = () => {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  // Mock featured hero products - replace with real API call
+  // Fetch featured hero products from API
   useEffect(() => {
-    const mockHeroProducts: Product[] = [
-      {
-        id: 1,
-        name: "iPhone 15 Pro Max",
-        slug: "iphone-15-pro-max",
-        price: 1199,
-        sale_price: 999,
-        image: "/images/iphone-15-pro.jpg",
-        rating: 4.8,
-        reviews_count: 2847,
-        in_stock: true
-      },
-      {
-        id: 2,
-        name: "Samsung Galaxy S24 Ultra",
-        slug: "samsung-galaxy-s24-ultra",
-        price: 1299,
-        image: "/images/samsung-s24.jpg",
-        rating: 4.7,
-        reviews_count: 1923,
-        in_stock: true
-      },
-      {
-        id: 3,
-        name: "MacBook Pro M3",
-        slug: "macbook-pro-m3",
-        price: 1999,
-        sale_price: 1799,
-        image: "/images/macbook-pro-m3.jpg",
-        rating: 4.9,
-        reviews_count: 1456,
-        in_stock: true
-      }
-    ];
-    setHeroProducts(mockHeroProducts);
+    setIsLoading(true);
+    productsApi.getFeaturedProducts()
+      .then((products) => {
+        setHeroProducts(products);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch featured products:', error);
+        setHeroProducts([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const featuredCategories = [
@@ -97,7 +65,7 @@ const HomePage: React.FC = () => {
     {
       id: 2,
       name: "Laptops",
-      slug: "laptops", 
+      slug: "laptops",
       image: "/images/categories/laptops.jpg",
       productCount: 89,
       color: "#764ba2"
@@ -106,7 +74,7 @@ const HomePage: React.FC = () => {
       id: 3,
       name: "Audio & Headphones",
       slug: "audio",
-      image: "/images/categories/audio.jpg", 
+      image: "/images/categories/audio.jpg",
       productCount: 234,
       color: "#f093fb"
     },
@@ -124,26 +92,22 @@ const HomePage: React.FC = () => {
     {
       icon: faShippingFast,
       title: "Free Shipping",
-      description: "Free delivery on orders over $50",
-      color: "#4CAF50"
+      description: "Free delivery on orders over $50"
     },
     {
       icon: faUndo,
-      title: "Easy Returns", 
-      description: "30-day hassle-free returns",
-      color: "#2196F3"
+      title: "Easy Returns",
+      description: "30-day hassle-free returns"
     },
     {
       icon: faShieldAlt,
       title: "Secure Payment",
-      description: "Your payment info is safe",
-      color: "#FF9800"
+      description: "Your payment info is safe"
     },
     {
       icon: faHeadset,
       title: "24/7 Support",
-      description: "Round-the-clock customer service",
-      color: "#9C27B0"
+      description: "Round-the-clock customer service"
     }
   ];
 
@@ -161,26 +125,30 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="homepage">
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <div className="hero-text">
-            <h1 className="hero-title">
-              Discover Amazing
-              <span className="gradient-text"> Tech Products</span>
-            </h1>
-            <p className="hero-description">
-              Shop the latest smartphones, laptops, and gadgets with unbeatable prices 
-              and fast, free shipping on orders over $50.
+    <div className="min-h-screen bg-slate-50">
+      <main className="mx-auto flex max-w-6xl flex-col gap-16 px-4 pb-16 pt-6 md:pt-10">
+        {/* Hero */}
+        <section className="grid items-start gap-10 md:grid-cols-2">
+          <div className="space-y-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand">
+              Your trusted tech marketplace
             </p>
-            <div className="hero-actions">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
+              Discover Amazing{" "}
+              <span className="bg-gradient-to-r from-brand to-brand-light bg-clip-text text-transparent">
+                Tech Products
+              </span>
+            </h1>
+            <p className="max-w-xl text-sm text-slate-600 md:text-base">
+              Shop the latest smartphones, laptops, audio gear, and gaming devices with
+              unbeatable prices and fast, free shipping on orders over $50.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="primary"
                 size="lg"
                 onClick={handleSearchProducts}
                 icon={<FontAwesomeIcon icon={faSearch} />}
-                className="hero-cta"
               >
                 Shop Now
               </Button>
@@ -189,179 +157,286 @@ const HomePage: React.FC = () => {
                 size="lg"
                 onClick={handleViewAllProducts}
                 icon={<FontAwesomeIcon icon={faEye} />}
-                className="hero-secondary"
               >
                 Browse All
               </Button>
             </div>
-            <div className="hero-stats">
-              <div className="stat-item">
-                <span className="stat-number">10K+</span>
-                <span className="stat-label">Products</span>
+            <div className="flex flex-wrap gap-6 pt-4 text-sm text-slate-700">
+              <div>
+                <div className="text-lg font-semibold text-slate-900">10K+</div>
+                <div className="text-slate-500">Products</div>
               </div>
-              <div className="stat-item">
-                <span className="stat-number">50K+</span>
-                <span className="stat-label">Happy Customers</span>
+              <div>
+                <div className="text-lg font-semibold text-slate-900">50K+</div>
+                <div className="text-slate-500">Happy customers</div>
               </div>
-              <div className="stat-item">
-                <span className="stat-number">4.8</span>
-                <span className="stat-label">
-                  <FontAwesomeIcon icon={faStar} /> Rating
-                </span>
+              <div>
+                <div className="flex items-center gap-1 text-lg font-semibold text-slate-900">
+                  4.8
+                  <FontAwesomeIcon icon={faStar} className="text-yellow-400" />
+                </div>
+                <div className="text-slate-500">Average rating</div>
               </div>
             </div>
           </div>
-          <div className="hero-visual">
-            <div className="hero-products-showcase">
-              {heroProducts.slice(0, 3).map((product, index) => (
-                <div 
-                  key={product.id} 
-                  className={`hero-product-card hero-product-${index + 1}`}
-                  style={{ '--delay': `${index * 0.2}s` } as React.CSSProperties}
-                >
-                  <ProductCard 
-                    product={product}
-                    isInWishlist={false}
-                  />
+
+          <div className="relative hidden md:block">
+            <div className="relative w-full" style={{ height: '500px' }}>
+              {isLoading ? (
+                <div className="absolute right-0 top-0 flex items-start">
+                  <div className="flex gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="h-96 w-64 rounded-xl bg-slate-200" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              ) : heroProducts.length === 0 ? (
+                <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-blue-50 to-slate-50 p-8 shadow-sm">
+                  <div className="space-y-2">
+                    <div className="text-sm font-semibold text-blue-600">Featured</div>
+                    <div className="text-2xl font-bold text-slate-900">Latest Tech</div>
+                    <div className="text-sm text-slate-600">Discover our handpicked selection</div>
+                  </div>
+                </div>
+              ) : (
+                heroProducts.slice(0, 3).map((product, index) => {
+                  const fixedProduct = {
+                    ...product,
+                    price: Number(product.price),
+                    original_price: product.original_price ? Number(product.original_price) : undefined,
+                    rating: product.rating ? Number(product.rating) : 0,
+                  };
+
+                  // Calculate rotation and offset for fan effect - organized spread from top
+                  const rotation = (index - 1) * 6; // -6, 0, 6 degrees (less rotation)
+                  const rightOffset = index * 28; // 0, 28, 56px from right (better spacing)
+                  const topOffset = index * 20; // 0, 20, 40px from top (organized spread)
+                  const zIndex = 10 - index; // Higher z-index for cards on top
+
+                  return (
+                    <div
+                      key={product.id}
+                      className="group absolute cursor-pointer transition-all duration-500 ease-out"
+                      style={{
+                        right: `${rightOffset}px`,
+                        top: `${topOffset}px`,
+                        transform: `rotate(${rotation}deg)`,
+                        transformOrigin: 'top center',
+                        zIndex: zIndex,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'rotate(0deg) translateY(-30px) scale(1.12)';
+                        e.currentTarget.style.zIndex = '50';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = `rotate(${rotation}deg)`;
+                        e.currentTarget.style.zIndex = `${zIndex}`;
+                      }}
+                      onClick={() => navigate(`/product/${product.slug}`)}
+                    >
+                      <div className="h-96 w-64 rounded-xl border-2 border-slate-200 bg-white p-5 shadow-lg transition-all duration-500 group-hover:border-blue-300 group-hover:shadow-2xl overflow-hidden flex flex-col">
+                        {/* Product Image - Portrait */}
+                        <div className="relative mb-3 h-56 w-full flex-shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                          {product.picture ? (
+                            <img
+                              src={product.picture}
+                              alt={product.name}
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              onError={(e) => {
+                                // Fallback if image fails to load
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className="hidden h-full w-full items-center justify-center text-slate-400"
+                            style={{ display: product.picture ? 'none' : 'flex' }}
+                          >
+                            <span className="text-5xl">📦</span>
+                          </div>
+                          {product.featured && (
+                            <div className="absolute right-2 top-2 rounded-full bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white shadow-md">
+                              Featured
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Product Info - Flex to fill remaining space */}
+                        <div className="flex flex-col flex-1 min-h-0 space-y-1.5 overflow-hidden">
+                          <h3 className="line-clamp-2 text-sm font-semibold text-slate-900 transition-colors group-hover:text-blue-600 leading-tight">
+                            {product.name}
+                          </h3>
+                          {product.brand && (
+                            <p className="text-xs font-medium text-slate-600 truncate">
+                              {typeof product.brand === 'object' ? product.brand.name : product.brand}
+                            </p>
+                          )}
+                          <div className="flex flex-col gap-1 mt-auto">
+                            <div className="flex items-baseline gap-1.5 flex-wrap">
+                              <span className="text-base font-bold text-slate-900">
+                                ${fixedProduct.price.toFixed(2)}
+                              </span>
+                              {fixedProduct.original_price && fixedProduct.original_price > fixedProduct.price && (
+                                <span className="text-xs text-slate-500 line-through">
+                                  ${fixedProduct.original_price.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                            {fixedProduct.rating > 0 && (
+                              <div className="flex items-center gap-1">
+                                <FontAwesomeIcon icon={faStar} className="text-xs text-yellow-400" />
+                                <span className="text-xs font-semibold text-slate-700">
+                                  {fixedProduct.rating.toFixed(1)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Quick Category Navigation */}
-      <section className="category-nav-section">
-        <div className="section-header">
-          <h2 className="section-title">Shop by Category</h2>
-          <p className="section-subtitle">Find exactly what you're looking for</p>
-        </div>
-        <div className="categories-grid">
-          {featuredCategories.map((category) => (
-            <Card 
-              key={category.id}
-              variant="glass"
-              className="category-card"
-              onClick={() => handleCategoryClick(category.slug)}
-              style={{ '--category-color': category.color } as React.CSSProperties}
-            >
-              <div className="category-image">
-                <img 
-                  src={category.image || '/images/placeholder-category.jpg'} 
-                  alt={category.name}
-                  loading="lazy"
-                />
-                <div className="category-overlay">
-                  <FontAwesomeIcon icon={faArrowRight} />
+        {/* Categories */}
+        <section className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+              Shop by Category
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Find exactly what you're looking for
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              {
+                id: 1,
+                name: "Smartphones",
+                slug: "smartphones",
+                icon: "📱"
+              },
+              {
+                id: 2,
+                name: "Laptops",
+                slug: "laptops",
+                icon: "💻"
+              },
+              {
+                id: 3,
+                name: "Audio",
+                slug: "audio",
+                icon: "🎧"
+              },
+              {
+                id: 4,
+                name: "Gaming",
+                slug: "gaming",
+                icon: "🎮"
+              }
+            ].map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category.slug)}
+                className="group flex flex-col items-center gap-3 rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all hover:border-blue-600 hover:shadow-md"
+              >
+                <div className="text-4xl">{category.icon}</div>
+                <h3 className="text-sm font-semibold text-slate-900 group-hover:text-blue-600">
+                  {category.name}
+                </h3>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Featured products */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+              Featured Products
+            </h2>
+          </div>
+          <FeaturedProducts />
+        </section>
+
+        {/* Key features */}
+        <section className="space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+              Why shop with us
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Experience the difference with our premium service
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {keyFeatures.map((feature, index) => (
+              <div
+                key={index}
+                className="flex flex-col items-center gap-3 rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <FontAwesomeIcon icon={feature.icon} className="text-lg" />
+                </div>
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {feature.title}
+                </h3>
+                <p className="text-xs text-slate-600">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Trust / social proof */}
+        <section>
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="grid gap-6 md:grid-cols-2 md:items-center">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-slate-900">4.8/5</div>
+                  <p className="mt-1 text-xs text-slate-600">Average Rating</p>
+                  <div className="mt-2 flex justify-center gap-1 text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <FontAwesomeIcon key={i} icon={faStar} />
+                    ))}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-slate-900">50,000+</div>
+                  <p className="mt-1 text-xs text-slate-600">Happy Customers</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-slate-900">99.9%</div>
+                  <p className="mt-1 text-xs text-slate-600">Uptime</p>
                 </div>
               </div>
-              <div className="category-info">
-                <h3 className="category-name">{category.name}</h3>
-                <p className="category-count">{category.productCount} products</p>
-                <div className="category-actions">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/category/${category.slug}/brands`);
-                    }}
-                  >
-                    View Brands
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/category/${category.slug}`);
-                    }}
-                  >
-                    All Products
-                  </Button>
-                </div>
+              <div className="space-y-2 text-sm text-slate-700">
+                <p className="italic">
+                  "Amazing product quality and super fast shipping. This is now my go‑to store for all
+                  tech needs!"
+                </p>
+                <p className="text-xs font-medium text-slate-600">
+                  — Sarah M., Verified Customer
+                </p>
               </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section className="featured-section">
-        <div className="section-header">
-          <h2 className="section-title">Featured Products</h2>
-          <p className="section-subtitle">Handpicked favorites just for you</p>
-        </div>
-        <FeaturedProducts />
-      </section>
-
-      {/* Key Features Grid */}
-      <section className="features-section">
-        <div className="section-header">
-          <h2 className="section-title">Why Choose Us</h2>
-          <p className="section-subtitle">Experience the difference with our premium service</p>
-        </div>
-        <div className="features-grid">
-          {keyFeatures.map((feature, index) => (
-            <Card 
-              key={index}
-              variant="glass"
-              className="feature-card"
-              style={{ '--feature-color': feature.color } as React.CSSProperties}
-            >
-              <div className="feature-icon">
-                <FontAwesomeIcon icon={feature.icon} />
-              </div>
-              <div className="feature-content">
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Trust Indicators */}
-      <section className="trust-section">
-        <Card variant="glass" className="trust-card" padding="xl">
-          <div className="trust-content">
-            <div className="trust-stats">
-              <div className="trust-stat">
-                <h3>4.8/5</h3>
-                <p>Average Rating</p>
-                <div className="rating-stars">
-                  {[...Array(5)].map((_, i) => (
-                    <FontAwesomeIcon 
-                      key={i} 
-                      icon={faStar} 
-                      className={i < 5 ? 'star-filled' : 'star-empty'} 
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="trust-stat">
-                <h3>50,000+</h3>
-                <p>Happy Customers</p>
-              </div>
-              <div className="trust-stat">
-                <h3>99.9%</h3>
-                <p>Uptime</p>
-              </div>
-            </div>
-            <div className="trust-testimonial">
-              <blockquote>
-                "Amazing product quality and super fast shipping. This is now my go-to store for all tech needs!"
-              </blockquote>
-              <cite>— Sarah M., Verified Customer</cite>
             </div>
           </div>
-        </Card>
-      </section>
+        </section>
 
-      {/* Newsletter Section */}
-      <section className="newsletter-section">
-        <Newsletter />
-      </section>
+        {/* Newsletter */}
+        <section>
+          <Newsletter />
+        </section>
+      </main>
     </div>
   );
 };

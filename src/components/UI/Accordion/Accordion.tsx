@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronRight } from '@fortawesome/free-solid-svg-icons';
-import './Accordion.css';
 
 export interface AccordionItemProps {
   id: string;

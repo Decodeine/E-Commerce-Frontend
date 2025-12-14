@@ -1,5 +1,4 @@
 import React from 'react';
-import './Loading.css';
 
 export type SkeletonType = 'text' | 'title' | 'avatar' | 'image' | 'card' | 'product' | 'list';
 

@@ -17,7 +17,6 @@ import Dropdown, { MenuDropdown, DropdownOption } from '../UI/Dropdown/Dropdown'
 import Button from '../UI/Button/Button';
 import Card from '../UI/Card/Card';
 
-import './css/UIShowcase.css';
 
 // Sample data for dropdowns
 const categoryOptions: DropdownOption[] = [

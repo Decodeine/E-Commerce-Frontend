@@ -13,7 +13,6 @@ import OrderReview from "./OrderReview";
 import OrderSummary from "./OrderSummary";
 import CheckoutNavbar from "./CheckoutNavbar";
 import { Row, Col } from "react-bootstrap";
-import "./css/checkout.css";
 import type { AppDispatch } from "../../store/store";
 
 const mapShippingStringToNumeric = (value: string): number => {

@@ -154,7 +154,7 @@ class ProductsAPI {
   // Core Product Endpoints
   async getProducts(params: FilterParams = {}): Promise<ProductListResponse> {
     const searchParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, value.toString());
@@ -177,7 +177,8 @@ class ProductsAPI {
 
   async getFeaturedProducts(): Promise<Product[]> {
     const response = await axios.get(`${this.baseUrl}featured/`);
-    return response.data;
+    // Handle paginated response (results) or direct array
+    return Array.isArray(response.data) ? response.data : (response.data.results || []);
   }
 
   async getDealsProducts(): Promise<Product[]> {
@@ -236,7 +237,7 @@ class ProductsAPI {
 
   async getBrandProducts(slug: string, params: FilterParams = {}): Promise<ProductListResponse> {
     const searchParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, value.toString());
@@ -249,10 +250,10 @@ class ProductsAPI {
 
   async getBrandProductsByCategory(brandSlug: string, categoryName: string, params: FilterParams = {}): Promise<ProductListResponse> {
     const searchParams = new URLSearchParams();
-    
+
     // Add category to params if not already present
     const updatedParams = { ...params, category: categoryName };
-    
+
     Object.entries(updatedParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, value.toString());
@@ -267,7 +268,8 @@ class ProductsAPI {
 
   async getCategories(): Promise<Category[]> {
     const response = await axios.get(`${this.baseUrl}categories/`);
-    return response.data;
+    // Handle paginated response (results) or direct array
+    return Array.isArray(response.data) ? response.data : (response.data.results || []);
   }
 
   async getCategory(id: number): Promise<Category> {
@@ -277,7 +279,7 @@ class ProductsAPI {
 
   async getCategoryProducts(categoryName: string, params: FilterParams = {}): Promise<ProductListResponse> {
     const searchParams = new URLSearchParams();
-    
+
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, value.toString());
@@ -294,12 +296,12 @@ class ProductsAPI {
   // User-Specific Endpoints (Require Authentication)
   async getWishlists(token: string): Promise<Wishlist[]> {
     this.requireAuth(token, 'access your wishlists');
-    
+
     console.log('🔍 Making wishlist request:', {
       url: `${this.baseUrl}wishlist/`,
       tokenPresent: !!token
     });
-    
+
     // The axios interceptor will handle adding the Bearer token
     const response = await axios.get(`${this.baseUrl}wishlist/`);
     return response.data;
@@ -307,8 +309,8 @@ class ProductsAPI {
 
   async createWishlist(token: string, data?: { name?: string }): Promise<Wishlist> {
     this.requireAuth(token, 'create a wishlist');
-    
-    const response = await axios.post(`${this.baseUrl}wishlist/`, 
+
+    const response = await axios.post(`${this.baseUrl}wishlist/`,
       data || {},
       {
         headers: {
@@ -322,7 +324,7 @@ class ProductsAPI {
 
   async getWishlistById(wishlistId: number, token: string): Promise<Wishlist> {
     this.requireAuth(token, 'access wishlist details');
-    
+
     const response = await axios.get(`${this.baseUrl}wishlist/${wishlistId}/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -333,8 +335,8 @@ class ProductsAPI {
 
   async updateWishlist(wishlistId: number, data: any, token: string): Promise<Wishlist> {
     this.requireAuth(token, 'update wishlist');
-    
-    const response = await axios.patch(`${this.baseUrl}wishlist/${wishlistId}/`, 
+
+    const response = await axios.patch(`${this.baseUrl}wishlist/${wishlistId}/`,
       data,
       {
         headers: {
@@ -348,7 +350,7 @@ class ProductsAPI {
 
   async deleteWishlist(wishlistId: number, token: string): Promise<void> {
     this.requireAuth(token, 'delete wishlist');
-    
+
     await axios.delete(`${this.baseUrl}wishlist/${wishlistId}/`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -385,7 +387,7 @@ class ProductsAPI {
       authHeader: `Bearer ${token}`.substring(0, 30) + '...',
       fullToken: token // TEMPORARY: Log full token to debug
     });
-    
+
     // Check if token looks like a JWT
     const tokenParts = token.split('.');
     console.log('🔍 Token analysis:', {
@@ -393,7 +395,7 @@ class ProductsAPI {
       isJWT: tokenParts.length === 3,
       header: tokenParts[0] ? atob(tokenParts[0]) : 'invalid'
     });
-    
+
     try {
       const result = await this.getWishlists(token);
       console.log('📋 Wishlist fetched successfully:', result);
@@ -413,14 +415,14 @@ class ProductsAPI {
   async addProductToWishlist(productId: number, token: string, wishlistId?: number): Promise<any> {
     console.log('➕ Adding product to wishlist:', { productId, wishlistId });
     this.requireAuth(token, 'add items to wishlist');
-    
+
     // Use the correct backend endpoint for adding products
     const endpoint = `${this.baseUrl}wishlist/add_product/`;
-      
+
     console.log('➕ Making API call to:', endpoint);
-    
+
     try {
-      const response = await axios.post(endpoint, 
+      const response = await axios.post(endpoint,
         { product_id: productId },
         {
           headers: {
@@ -440,12 +442,12 @@ class ProductsAPI {
   async removeProductFromWishlist(productId: number, token: string, wishlistId?: number): Promise<any> {
     console.log('➖ Removing product from wishlist:', { productId, wishlistId });
     this.requireAuth(token, 'modify your wishlist');
-    
+
     // Use the correct backend endpoint for removing products
     const endpoint = `${this.baseUrl}wishlist/remove_product/`;
-      
+
     console.log('➖ Making API call to:', endpoint);
-    
+
     try {
       const response = await axios.delete(endpoint, {
         data: { product_id: productId },
@@ -468,10 +470,10 @@ class ProductsAPI {
       console.log('🔍 User not authenticated, product not in wishlist');
       return false; // Not authenticated, so product is not in wishlist
     }
-    
+
     try {
       const wishlists = await this.getWishlist(token);
-      const isInWishlist = wishlists.some(wishlist => 
+      const isInWishlist = wishlists.some(wishlist =>
         wishlist.products.some(item => item.product.id === productId)
       );
       console.log('🔍 Product in wishlist check:', { productId, isInWishlist });
@@ -486,10 +488,10 @@ class ProductsAPI {
   async toggleProductInWishlist(productId: number, token: string): Promise<{ added: boolean; message: string }> {
     console.log('🔄 Toggling product in wishlist:', productId);
     this.requireAuth(token, 'manage your wishlist');
-    
+
     try {
       const isInWishlist = await this.isProductInWishlist(productId, token);
-      
+
       if (isInWishlist) {
         await this.removeProductFromWishlist(productId, token);
         console.log('🔄 Product removed from wishlist');
@@ -516,7 +518,7 @@ class ProductsAPI {
   }
 
   async createPriceAlert(data: { product: number; target_price: number }, token: string): Promise<any> {
-    const response = await axios.post(`${this.baseUrl}price-alerts/`, 
+    const response = await axios.post(`${this.baseUrl}price-alerts/`,
       data,
       {
         headers: {
@@ -529,7 +531,7 @@ class ProductsAPI {
   }
 
   async updatePriceAlert(alertId: number, data: any, token: string): Promise<any> {
-    const response = await axios.patch(`${this.baseUrl}price-alerts/${alertId}/`, 
+    const response = await axios.patch(`${this.baseUrl}price-alerts/${alertId}/`,
       data,
       {
         headers: {
@@ -553,7 +555,7 @@ class ProductsAPI {
   async getProductComparisons(token: string): Promise<ProductComparison[]> {
     console.log('⚖️ Fetching product comparisons');
     this.requireAuth(token, 'access product comparisons');
-    
+
     // The axios interceptor will handle adding the Bearer token
     const response = await axios.get(`${this.baseUrl}product-comparison/`);
     console.log('⚖️ Product comparisons fetched:', response.data);
@@ -563,9 +565,9 @@ class ProductsAPI {
   async createProductComparison(token: string): Promise<ProductComparison> {
     console.log('⚖️ Creating new product comparison');
     this.requireAuth(token, 'create product comparisons');
-    
+
     try {
-      const response = await axios.post(`${this.baseUrl}product-comparison/`, 
+      const response = await axios.post(`${this.baseUrl}product-comparison/`,
         {},
         {
           headers: {
@@ -585,9 +587,9 @@ class ProductsAPI {
   async addProductToComparison(comparisonId: number, productId: number, token: string): Promise<any> {
     console.log('⚖️ Adding product to comparison:', { comparisonId, productId });
     this.requireAuth(token, 'add products to comparison');
-    
+
     try {
-      const response = await axios.post(`${this.baseUrl}product-comparison/${comparisonId}/add_product/`, 
+      const response = await axios.post(`${this.baseUrl}product-comparison/${comparisonId}/add_product/`,
         { product_id: productId },
         {
           headers: {
@@ -607,7 +609,7 @@ class ProductsAPI {
   async removeProductFromComparison(comparisonId: number, productId: number, token: string): Promise<any> {
     console.log('⚖️ Removing product from comparison:', { comparisonId, productId });
     this.requireAuth(token, 'remove products from comparison');
-    
+
     try {
       const response = await axios.delete(`${this.baseUrl}product-comparison/${comparisonId}/remove_product/`, {
         data: { product_id: productId },
@@ -633,7 +635,7 @@ class ProductsAPI {
   }
 
   async createReview(productId: number, data: any, token: string): Promise<any> {
-    const response = await axios.post(`${this.baseUrl}${productId}/reviews/`, 
+    const response = await axios.post(`${this.baseUrl}${productId}/reviews/`,
       data,
       {
         headers: {
@@ -646,7 +648,7 @@ class ProductsAPI {
   }
 
   async updateReview(productId: number, reviewId: number, data: any, token: string): Promise<any> {
-    const response = await axios.patch(`${this.baseUrl}${productId}/reviews/${reviewId}/`, 
+    const response = await axios.patch(`${this.baseUrl}${productId}/reviews/${reviewId}/`,
       data,
       {
         headers: {
@@ -670,12 +672,12 @@ class ProductsAPI {
     const headers: any = {
       'Content-Type': 'application/json',
     };
-    
+
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await axios.post(`${this.baseUrl}${productId}/reviews/${reviewId}/helpful/`, 
+    const response = await axios.post(`${this.baseUrl}${productId}/reviews/${reviewId}/helpful/`,
       {},
       { headers }
     );
@@ -688,7 +690,7 @@ class ProductsAPI {
     if (searchQuery) {
       params.append('search', searchQuery);
     }
-    
+
     const url = `${this.baseUrl}categories/${categorySlug}/brands/${params.toString() ? '?' + params.toString() : ''}`;
     const response = await axios.get(url);
     return response.data.results || response.data;

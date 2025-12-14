@@ -63,7 +63,7 @@ const Delivery: React.FC<DeliveryProps> = ({ previousPage, onSubmit }) => {
                           </Tooltip>
                         }
                       >
-                        <span style={{ textDecoration: "underline", cursor: "pointer" }}>
+                        <span className="cursor-pointer underline">
                           Not eligible yet
                         </span>
                       </OverlayTrigger>

@@ -1,302 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faStar,
-  faArrowRight,
-  faChevronLeft,
-  faChevronRight,
-  faFire,
-  faTags,
-  faClock,
-  faAward
-} from '@fortawesome/free-solid-svg-icons';
-import ProductCard from './ProductCard';
-import Button from '../UI/Button/Button';
-import Card from '../UI/Card/Card';
-import { 
-  fetchFeaturedProducts,
-  fetchDealsProducts,
-  fetchNewArrivals,
-  fetchTopRated 
-} from '../../store/actions/storeActions';
-import type { AppDispatch } from '../../store/store';
-import { Product } from '../../services/productsApi';
-import './css/FeaturedProducts.css';
-
-interface FeaturedSection {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: any;
-  products: Product[];
-  loading: boolean;
-  viewAllLink?: string;
-  color: string;
-}
+import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { productsApi } from '../../services/productsApi';
+import type { Product } from '../../services/productsApi';
 
 const FeaturedProducts: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { 
-    featuredProducts, 
-    dealsProducts, 
-    newArrivals, 
-    topRated, 
-    loading 
-  } = useSelector((state: any) => state.store);
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [activeSection, setActiveSection] = useState('featured');
-  const [carouselPositions, setCarouselPositions] = useState<{[key: string]: number}>({});
+  React.useEffect(() => {
+    productsApi.getFeaturedProducts()
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
+  }, []);
 
-  useEffect(() => {
-    // Fetch all featured product sections
-    dispatch(fetchFeaturedProducts());
-    dispatch(fetchDealsProducts());
-    dispatch(fetchNewArrivals());
-    dispatch(fetchTopRated());
-  }, [dispatch]);
-
-  const featuredSections: FeaturedSection[] = [
-    {
-      id: 'featured',
-      title: 'Featured Products',
-      subtitle: 'Hand-picked products just for you',
-      icon: faStar,
-      products: featuredProducts || [],
-      loading: loading,
-      viewAllLink: '/products?featured=true',
-      color: 'var(--primary-color)'
-    },
-    {
-      id: 'deals',
-      title: 'Hot Deals',
-      subtitle: 'Limited time offers and discounts',
-      icon: faFire,
-      products: dealsProducts || [],
-      loading: loading,
-      viewAllLink: '/products?deals=true',
-      color: 'var(--error-color)'
-    },
-    {
-      id: 'new',
-      title: 'New Arrivals',
-      subtitle: 'Latest products in our collection',
-      icon: faClock,
-      products: newArrivals || [],
-      loading: loading,
-      viewAllLink: '/products?new=true',
-      color: 'var(--success-color)'
-    },
-    {
-      id: 'rated',
-      title: 'Top Rated',
-      subtitle: 'Customer favorites and best sellers',
-      icon: faAward,
-      products: topRated || [],
-      loading: loading,
-      viewAllLink: '/products?top_rated=true',
-      color: 'var(--warning-color)'
-    }
-  ];
-
-  const scrollCarousel = (sectionId: string, direction: 'left' | 'right') => {
-    const container = document.getElementById(`carousel-${sectionId}`);
-    if (!container) return;
-
-    const scrollAmount = 320; // Width of one product card + gap
-    const currentPosition = carouselPositions[sectionId] || 0;
-    const maxScroll = container.scrollWidth - container.clientWidth;
-
-    let newPosition;
-    if (direction === 'left') {
-      newPosition = Math.max(0, currentPosition - scrollAmount);
-    } else {
-      newPosition = Math.min(maxScroll, currentPosition + scrollAmount);
-    }
-
-    container.scrollTo({ left: newPosition, behavior: 'smooth' });
-    setCarouselPositions(prev => ({ ...prev, [sectionId]: newPosition }));
-  };
-
-  const ProductCarousel: React.FC<{ section: FeaturedSection }> = ({ section }) => {
-    const canScrollLeft = (carouselPositions[section.id] || 0) > 0;
-    const canScrollRight = () => {
-      const container = document.getElementById(`carousel-${section.id}`);
-      if (!container) return true;
-      const maxScroll = container.scrollWidth - container.clientWidth;
-      return (carouselPositions[section.id] || 0) < maxScroll;
-    };
-
-    if (section.loading) {
-      return (
-        <div className="carousel-container">
-          <div className="loading-carousel">
-            {[...Array(4)].map((_, index) => (
-              <div key={index} className="loading-card">
-                <div className="loading-image"></div>
-                <div className="loading-content">
-                  <div className="loading-line"></div>
-                  <div className="loading-line short"></div>
-                  <div className="loading-line"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (!section.products || section.products.length === 0) {
-      return (
-        <div className="empty-section">
-          <FontAwesomeIcon icon={section.icon} className="empty-icon" />
-          <p>No products available in this section yet.</p>
-        </div>
-      );
-    }
-
+  if (loading) {
     return (
-      <div className="carousel-container">
-        {section.products.length > 4 && (
-          <>
-            <button
-              className={`carousel-btn carousel-btn-left ${!canScrollLeft ? 'disabled' : ''}`}
-              onClick={() => scrollCarousel(section.id, 'left')}
-              disabled={!canScrollLeft}
-              aria-label="Scroll left"
-            >
-              <FontAwesomeIcon icon={faChevronLeft} />
-            </button>
-            <button
-              className={`carousel-btn carousel-btn-right ${!canScrollRight() ? 'disabled' : ''}`}
-              onClick={() => scrollCarousel(section.id, 'right')}
-              disabled={!canScrollRight()}
-              aria-label="Scroll right"
-            >
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
-          </>
-        )}
-        
-        <div
-          id={`carousel-${section.id}`}
-          className="product-carousel"
-          onScroll={(e) => {
-            const target = e.target as HTMLElement;
-            setCarouselPositions(prev => ({ 
-              ...prev, 
-              [section.id]: target.scrollLeft 
-            }));
-          }}
-        >
-          {(Array.isArray(section.products) ? section.products : []).map((product) => (
-            <div key={product.id} className="carousel-item">
-              <ProductCard 
-                product={{
-                  id: product.id,
-                  name: product.name,
-                  slug: product.slug,
-                  price: parseFloat(product.price),
-                  sale_price: product.original_price ? parseFloat(product.original_price) : undefined,
-                  image: product.picture,
-                  rating: parseFloat(product.rating),
-                  reviews_count: product.review_count,
-                  in_stock: product.in_stock
-                }}
-                onAddToCart={(id) => {/* TODO: implement */}}
-                onToggleWishlist={(id) => {/* TODO: implement */}}
-                isInWishlist={false}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const SectionTabs = () => (
-    <div className="section-tabs">
-      {(Array.isArray(featuredSections) ? featuredSections : []).map((section) => (
-        <button
-          key={section.id}
-          className={`section-tab ${activeSection === section.id ? 'active' : ''}`}
-          onClick={() => setActiveSection(section.id)}
-          style={{ '--tab-color': section.color } as React.CSSProperties}
-        >
-          <FontAwesomeIcon icon={section.icon} />
-          <span className="tab-title">{section.title}</span>
-          <span className="tab-count">
-            {section.products?.length || 0}
-          </span>
-        </button>
-      ))}
-    </div>
-  );
-
-  const activeFeatureSection = featuredSections.find(s => s.id === activeSection);
-
-  return (
-    <div className="featured-products-container">
-      <Card className="featured-products-card">
-        {/* Section Header */}
-        <div className="featured-header">
-          <div className="header-content">
-            <FontAwesomeIcon 
-              icon={activeFeatureSection?.icon} 
-              className="header-icon"
-              style={{ color: activeFeatureSection?.color }}
-            />
-            <div className="header-text">
-              <h2 className="section-title">{activeFeatureSection?.title}</h2>
-              <p className="section-subtitle">{activeFeatureSection?.subtitle}</p>
-            </div>
-          </div>
-          {activeFeatureSection?.viewAllLink && (
-            <Button 
-              variant="outline" 
-              className="view-all-btn"
-              onClick={() => window.location.href = activeFeatureSection.viewAllLink!}
-            >
-              View All
-              <FontAwesomeIcon icon={faArrowRight} />
-            </Button>
-          )}
-        </div>
-
-        {/* Section Navigation Tabs */}
-        <SectionTabs />
-
-        {/* Active Section Content */}
-        {activeFeatureSection && (
-          <div className="section-content">
-            <ProductCarousel section={activeFeatureSection} />
-          </div>
-        )}
-
-        {/* Section Indicators */}
-        <div className="section-indicators">
-          {featuredSections.map((section) => (
-            <div
-              key={section.id}
-              className={`indicator ${activeSection === section.id ? 'active' : ''}`}
-              style={{ backgroundColor: section.color }}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Quick Stats */}
-      <div className="quick-stats">
-        {featuredSections.map((section) => (
-          <div key={section.id} className="stat-item">
-            <FontAwesomeIcon icon={section.icon} style={{ color: section.color }} />
-            <div className="stat-content">
-              <span className="stat-number">{section.products?.length || 0}</span>
-              <span className="stat-label">{section.title}</span>
-            </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="animate-pulse rounded-lg border border-slate-200 bg-white p-3">
+            <div className="aspect-square rounded-md bg-slate-200" />
+            <div className="mt-2 h-3 rounded bg-slate-200" />
+            <div className="mt-1 h-3 w-2/3 rounded bg-slate-200" />
           </div>
         ))}
       </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return null;
+  }
+
+  // Limit to 4-6 products for a compact view
+  const displayProducts = products.slice(0, 6);
+
+  return (
+    <div className="space-y-3">
+      {/* Compact Grid Layout */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        {displayProducts.map((product) => {
+          const fixedProduct = {
+            ...product,
+            price: Number(product.price),
+            original_price: product.original_price ? Number(product.original_price) : undefined,
+            sale_price: product.original_price ? Number(product.original_price) : undefined,
+            rating: product.rating ? Number(product.rating) : 0,
+          };
+          return (
+            <div key={product.id} className="group">
+              <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-all hover:border-blue-300 hover:shadow-md">
+                {/* Product Image */}
+                <div className="relative mb-2 aspect-square overflow-hidden rounded-md bg-slate-100">
+                  {product.picture ? (
+                    <img
+                      src={product.picture}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-slate-400">
+                      <span className="text-2xl">📦</span>
+                    </div>
+                  )}
+                  {product.featured && (
+                    <div className="absolute right-2 top-2 rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white">
+                      Featured
+                    </div>
+                  )}
+                </div>
+                
+                {/* Product Info */}
+                <div className="space-y-1">
+                  <h3 
+                    className="line-clamp-2 cursor-pointer text-xs font-medium text-slate-900 transition-colors hover:text-blue-600"
+                    onClick={() => navigate(`/product/${product.slug}`)}
+                  >
+                    {product.name}
+                  </h3>
+                  
+                  {/* Price */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-900">
+                      ${fixedProduct.price.toFixed(2)}
+                    </span>
+                    {fixedProduct.original_price && fixedProduct.original_price > fixedProduct.price && (
+                      <span className="text-xs text-slate-500 line-through">
+                        ${fixedProduct.original_price.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Rating */}
+                  {fixedProduct.rating > 0 && (
+                    <div className="flex items-center gap-1">
+                      <FontAwesomeIcon icon={faStar} className="text-xs text-yellow-400" />
+                      <span className="text-xs text-slate-600">
+                        {fixedProduct.rating.toFixed(1)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* View All Link */}
+      {products.length > displayProducts.length && (
+        <div className="pt-2 text-center">
+          <button
+            onClick={() => navigate('/products')}
+            className="text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
+          >
+            View All Products →
+          </button>
+        </div>
+      )}
     </div>
   );
 };

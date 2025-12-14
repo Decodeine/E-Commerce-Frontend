@@ -7,7 +7,6 @@ import {
   faTimes,
   faExclamationCircle
 } from '@fortawesome/free-solid-svg-icons';
-import './Toast.css';
 
 export interface ToastData {
   id: string;

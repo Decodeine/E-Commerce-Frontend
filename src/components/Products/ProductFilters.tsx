@@ -14,7 +14,6 @@ import Card from '../UI/Card/Card';
 import { fetchBrands, fetchCategories, setFilters } from '../../store/actions/storeActions';
 import { FilterParams } from '../../services/productsApi';
 import type { AppDispatch } from '../../store/store';
-import './css/ProductFilters.css';
 
 interface ProductFiltersProps {
   onFiltersChange: (filters: FilterParams) => void;
@@ -81,16 +80,6 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
     }));
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <FontAwesomeIcon
-        key={i}
-        icon={faStar}
-        className={i < rating ? 'star-filled' : 'star-empty'}
-      />
-    ));
-  };
-
   const popularTags = [
     '5G', 'wireless-charging', 'face-id', 'waterproof', 
     'bluetooth', 'fast-charging', 'dual-camera', 'fingerprint'
@@ -114,19 +103,20 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
   ];
 
   return (
-    <div className={`product-filters ${isOpen ? 'product-filters--open' : ''}`}>
-      <Card className="filters-card" padding="lg">
-        <div className="filters-header">
-          <h3 className="filters-title">
-            <FontAwesomeIcon icon={faFilter} />
+    <div className={`w-full transition-all duration-300 ${isOpen ? 'block' : 'hidden'}`}>
+      <Card className="p-6" padding="lg">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+            <FontAwesomeIcon icon={faFilter} className="text-blue-600" />
             Filters
           </h3>
-          <div className="filters-actions">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={clearFilters}
-              className="clear-filters-btn"
+              className="text-sm text-slate-600 hover:text-slate-900"
             >
               Clear All
             </Button>
@@ -134,30 +124,34 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
               variant="ghost"
               size="sm"
               onClick={onToggle}
-              className="toggle-filters-btn"
               icon={isOpen ? faChevronUp : faChevronDown}
+              className="text-sm"
             >
               {isOpen ? 'Hide' : 'Show'}
             </Button>
           </div>
         </div>
 
-        <div className="filters-content">
+        <div className="space-y-6">
           {/* Search Filter */}
-          <div className="filter-section">
-            <div className="search-filter">
-              <FontAwesomeIcon icon={faSearch} className="search-icon" />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Search</label>
+            <div className="relative">
+              <FontAwesomeIcon 
+                icon={faSearch} 
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" 
+              />
               <input
                 type="text"
                 placeholder="Search products..."
                 value={(localFilters || {}).search || ''}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="search-input"
+                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
               />
               {(localFilters || {}).search && (
                 <button
                   onClick={() => handleFilterChange('search', '')}
-                  className="clear-search-btn"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   <FontAwesomeIcon icon={faTimes} />
                 </button>
@@ -166,12 +160,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           </div>
 
           {/* Sort Filter */}
-          <div className="filter-section">
-            <label className="filter-label">Sort by</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Sort by</label>
             <select
               value={(localFilters || {}).ordering || ''}
               onChange={(e) => handleFilterChange('ordering', e.target.value)}
-              className="filter-select"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
             >
               <option value="">Default</option>
               {sortOptions.map(option => (
@@ -183,33 +177,34 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           </div>
 
           {/* Price Range Filter */}
-          <div className="filter-section">
+          <div className="space-y-2">
             <button
-              className="section-toggle"
+              className="flex w-full items-center justify-between text-sm font-medium text-slate-700"
               onClick={() => toggleSection('price')}
             >
               <span>Price Range</span>
               <FontAwesomeIcon 
-                icon={expandedSections.price ? faChevronUp : faChevronDown} 
+                icon={expandedSections.price ? faChevronUp : faChevronDown}
+                className="text-slate-400"
               />
             </button>
             {expandedSections.price && (
-              <div className="filter-content">
-                <div className="price-inputs">
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
                   <input
                     type="number"
                     placeholder="Min"
                     value={(localFilters || {}).price__gte || ''}
                     onChange={(e) => handleFilterChange('price__gte', e.target.value)}
-                    className="price-input"
+                    className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                   />
-                  <span className="price-separator">to</span>
+                  <span className="text-sm text-slate-500">to</span>
                   <input
                     type="number"
                     placeholder="Max"
                     value={(localFilters || {}).price__lte || ''}
                     onChange={(e) => handleFilterChange('price__lte', e.target.value)}
-                    className="price-input"
+                    className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                   />
                 </div>
               </div>
@@ -217,30 +212,42 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           </div>
 
           {/* Rating Filter */}
-          <div className="filter-section">
+          <div className="space-y-2">
             <button
-              className="section-toggle"
+              className="flex w-full items-center justify-between text-sm font-medium text-slate-700"
               onClick={() => toggleSection('rating')}
             >
               <span>Minimum Rating</span>
               <FontAwesomeIcon 
-                icon={expandedSections.rating ? faChevronUp : faChevronDown} 
+                icon={expandedSections.rating ? faChevronUp : faChevronDown}
+                className="text-slate-400"
               />
             </button>
             {expandedSections.rating && (
-              <div className="filter-content">
+              <div className="mt-2 space-y-2">
                 {[4, 3, 2, 1].map(rating => (
-                  <label key={rating} className="rating-option">
+                  <label 
+                    key={rating} 
+                    className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 bg-white p-2 transition-colors hover:bg-slate-50"
+                  >
                     <input
                       type="radio"
                       name="rating"
                       value={rating}
                       checked={(localFilters || {}).rating__gte === rating}
                       onChange={(e) => handleFilterChange('rating__gte', Number(e.target.value))}
+                      className="h-4 w-4 text-blue-600 focus:ring-2 focus:ring-blue-600/20"
                     />
-                    <span className="rating-display">
-                      {renderStars(rating)} & up
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <FontAwesomeIcon
+                          key={i}
+                          icon={faStar}
+                          className={`text-sm ${i < rating ? 'text-yellow-400' : 'text-slate-300'}`}
+                        />
+                      ))}
+                      <span className="text-sm text-slate-600">& up</span>
+                    </div>
                   </label>
                 ))}
               </div>
@@ -248,20 +255,24 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           </div>
 
           {/* Brands Filter */}
-          <div className="filter-section">
+          <div className="space-y-2">
             <button
-              className="section-toggle"
+              className="flex w-full items-center justify-between text-sm font-medium text-slate-700"
               onClick={() => toggleSection('brands')}
             >
               <span>Brands</span>
               <FontAwesomeIcon 
-                icon={expandedSections.brands ? faChevronUp : faChevronDown} 
+                icon={expandedSections.brands ? faChevronUp : faChevronDown}
+                className="text-slate-400"
               />
             </button>
             {expandedSections.brands && (
-              <div className="filter-content">
+              <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
                 {(Array.isArray(brands) ? brands : []).slice(0, 10).map((brand: any) => (
-                  <label key={brand.slug} className="checkbox-option">
+                  <label 
+                    key={brand.slug} 
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 transition-colors hover:bg-slate-50"
+                  >
                     <input
                       type="checkbox"
                       checked={(localFilters || {}).brand__slug?.split(',').includes(brand.slug) || false}
@@ -273,9 +284,10 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                           : currentBrands.filter(b => b !== brand.slug);
                         handleFilterChange('brand__slug', newBrands.join(','));
                       }}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600/20"
                     />
-                    <span className="checkbox-label">
-                      {brand.name} ({brand.product_count || 0})
+                    <span className="flex-1 text-sm text-slate-700">
+                      {brand.name} <span className="text-slate-400">({brand.product_count || 0})</span>
                     </span>
                   </label>
                 ))}
@@ -284,20 +296,24 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           </div>
 
           {/* Categories Filter */}
-          <div className="filter-section">
+          <div className="space-y-2">
             <button
-              className="section-toggle"
+              className="flex w-full items-center justify-between text-sm font-medium text-slate-700"
               onClick={() => toggleSection('categories')}
             >
               <span>Categories</span>
               <FontAwesomeIcon 
-                icon={expandedSections.categories ? faChevronUp : faChevronDown} 
+                icon={expandedSections.categories ? faChevronUp : faChevronDown}
+                className="text-slate-400"
               />
             </button>
             {expandedSections.categories && (
-              <div className="filter-content">
+              <div className="mt-2 max-h-48 space-y-2 overflow-y-auto">
                 {(Array.isArray(categories) ? categories : []).slice(0, 10).map((category: any) => (
-                  <label key={category.id} className="checkbox-option">
+                  <label 
+                    key={category.id} 
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 transition-colors hover:bg-slate-50"
+                  >
                     <input
                       type="checkbox"
                       checked={(localFilters || {}).category__name?.split(',').includes(category.name) || false}
@@ -309,9 +325,10 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
                           : currentCategories.filter(c => c !== category.name);
                         handleFilterChange('category__name', newCategories.join(','));
                       }}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600/20"
                     />
-                    <span className="checkbox-label">
-                      {category.name} ({category.product_count || 0})
+                    <span className="flex-1 text-sm text-slate-700">
+                      {category.name} <span className="text-slate-400">({category.product_count || 0})</span>
                     </span>
                   </label>
                 ))}
@@ -320,24 +337,27 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           </div>
 
           {/* Features/Tags Filter */}
-          <div className="filter-section">
+          <div className="space-y-2">
             <button
-              className="section-toggle"
+              className="flex w-full items-center justify-between text-sm font-medium text-slate-700"
               onClick={() => toggleSection('features')}
             >
               <span>Features</span>
               <FontAwesomeIcon 
-                icon={expandedSections.features ? faChevronUp : faChevronDown} 
+                icon={expandedSections.features ? faChevronUp : faChevronDown}
+                className="text-slate-400"
               />
             </button>
             {expandedSections.features && (
-              <div className="filter-content">
-                <div className="tags-grid">
+              <div className="mt-2">
+                <div className="flex flex-wrap gap-2">
                   {popularTags.map(tag => (
                     <button
                       key={tag}
-                      className={`tag-button ${
-                        (localFilters || {}).tags?.split(',').includes(tag) ? 'tag-button--active' : ''
+                      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        (localFilters || {}).tags?.split(',').includes(tag)
+                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                       }`}
                       onClick={() => {
                         const filters = localFilters || {};
@@ -357,12 +377,12 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
           </div>
 
           {/* Condition Filter */}
-          <div className="filter-section">
-            <label className="filter-label">Condition</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">Condition</label>
             <select
               value={(localFilters || {}).condition || ''}
               onChange={(e) => handleFilterChange('condition', e.target.value)}
-              className="filter-select"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
             >
               <option value="">All Conditions</option>
               {conditions.map(condition => (
@@ -373,37 +393,35 @@ const ProductFilters: React.FC<ProductFiltersProps> = ({
             </select>
           </div>
 
-          {/* Stock Filter */}
-          <div className="filter-section">
-            <label className="checkbox-option">
+          {/* Stock & Featured Filters */}
+          <div className="space-y-3 border-t border-slate-200 pt-4">
+            <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={(localFilters || {}).in_stock || false}
                 onChange={(e) => handleFilterChange('in_stock', e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600/20"
               />
-              <span className="checkbox-label">In Stock Only</span>
+              <span className="text-sm text-slate-700">In Stock Only</span>
             </label>
-          </div>
-
-          {/* Featured Filter */}
-          <div className="filter-section">
-            <label className="checkbox-option">
+            <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={(localFilters || {}).featured || false}
                 onChange={(e) => handleFilterChange('featured', e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-600/20"
               />
-              <span className="checkbox-label">Featured Products Only</span>
+              <span className="text-sm text-slate-700">Featured Products Only</span>
             </label>
           </div>
 
           {/* Apply Filters Button */}
-          <div className="filter-actions">
+          <div className="border-t border-slate-200 pt-4">
             <Button
               variant="primary"
               fullWidth
               onClick={applyFilters}
-              className="apply-filters-btn"
+              className="w-full"
             >
               Apply Filters
             </Button>

@@ -16,7 +16,6 @@ import {
   faChevronDown
 } from '@fortawesome/free-solid-svg-icons';
 import Button from '../UI/Button/Button';
-import './css/CategoryNavigation.css';
 
 interface Category {
   id: string;
